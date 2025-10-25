@@ -1,0 +1,215 @@
+import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import {
+  LayoutDashboard,
+  Cpu,
+  BarChart3,
+  Target,
+  Lightbulb,
+  Settings,
+  LogOut,
+  Moon,
+  Sun,
+  Shield,
+  Menu,
+  X
+} from 'lucide-react';
+import { useState } from 'react';
+
+interface NavbarProps {
+  currentView: string;
+  onNavigate: (view: string) => void;
+}
+
+export default function Navbar({ currentView, onNavigate }: NavbarProps) {
+  const { profile, signOut } = useAuth();
+  const { t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navItems = [
+    { id: 'dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { id: 'devices', icon: Cpu, label: t('nav.devices') },
+    { id: 'consumption', icon: BarChart3, label: t('nav.consumption') },
+    { id: 'goals', icon: Target, label: t('nav.goals') },
+    { id: 'recommendations', icon: Lightbulb, label: t('nav.recommendations') },
+  ];
+
+  if (profile?.role === 'admin') {
+    navItems.push({ id: 'admin', icon: Shield, label: t('nav.admin') });
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  return (
+    <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50" role="navigation" aria-label="Main navigation">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              {t('app.title')}
+            </h1>
+          </div>
+
+          <div className="hidden md:flex items-center space-x-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigate(item.id)}
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                    isActive
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <Icon className="w-4 h-4 mr-2" aria-hidden="true" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="hidden md:flex items-center space-x-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5" aria-hidden="true" /> : <Sun className="w-5 h-5" aria-hidden="true" />}
+            </button>
+
+            <button
+              onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              aria-label="Cambiar idioma"
+            >
+              <span className="sr-only">{t('settings.language')}</span>
+              <span className="text-sm font-medium">{language === 'es' ? 'ES' : 'EN'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                // emitir evento global para mostrar/ocultar panel
+                const ev = new CustomEvent('toggleAccessibilityPanel', { detail: {} });
+                window.dispatchEvent(ev);
+              }}
+              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              aria-label="Accessibility options"
+            >
+              <Shield className="w-5 h-5" aria-hidden="true" />
+            </button>
+
+            <button
+              onClick={() => onNavigate('settings')}
+              className={`p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                currentView === 'settings'
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+              aria-label={t('nav.settings')}
+            >
+              <Settings className="w-5 h-5" aria-hidden="true" />
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              aria-label={t('nav.logout')}
+            >
+              <LogOut className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
+          </button>
+        </div>
+      </div>
+
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onNavigate(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center px-3 py-2 rounded-lg text-base font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                    isActive
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <Icon className="w-5 h-5 mr-3" aria-hidden="true" />
+                  {item.label}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => {
+                onNavigate('settings');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center px-3 py-2 rounded-lg text-base font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                currentView === 'settings'
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Settings className="w-5 h-5 mr-3" aria-hidden="true" />
+              {t('nav.settings')}
+            </button>
+
+            <button
+              onClick={() => { setLanguage(language === 'es' ? 'en' : 'es'); setMobileMenuOpen(false); }}
+              className="w-full flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <span className="w-5 h-5 mr-3 flex items-center justify-center text-sm">{language === 'es' ? 'ES' : 'EN'}</span>
+              {language === 'es' ? 'Español' : 'English'}
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5 mr-3" aria-hidden="true" /> : <Sun className="w-5 h-5 mr-3" aria-hidden="true" />}
+              {theme === 'light' ? t('settings.theme.dark') : t('settings.theme.light')}
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <LogOut className="w-5 h-5 mr-3" aria-hidden="true" />
+              {t('nav.logout')}
+            </button>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}
