@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -85,20 +85,11 @@ export default function App() {
 }
 
 function AppWithAccessibility() {
-  const [panelOpen, setPanelOpen] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setPanelOpen((v) => !v);
-    // recibir evento disparado por Navbar
-    const listener = () => handler();
-    window.addEventListener('toggleAccessibilityPanel', listener as EventListener);
-    return () => window.removeEventListener('toggleAccessibilityPanel', listener as EventListener);
-  }, []);
-
+  // Ahora el panel de accesibilidad se muestra siempre (incluye su propia pestaña flotante)
   return (
     <>
       <AppContent />
-      {panelOpen && <AccessibilityPanel />}
+      <AccessibilityPanel />
     </>
   );
 }
