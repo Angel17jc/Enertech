@@ -5,6 +5,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import SignIn from './components/Auth/SignIn';
 import SignUp from './components/Auth/SignUp';
 import Navbar from './components/Layout/Navbar';
+import Footer from './components/Layout/Footer';
 import Dashboard from './components/Dashboard/Dashboard';
 import Devices from './components/Devices/Devices';
 import Consumption from './components/Consumption/Consumption';
@@ -66,6 +67,7 @@ function AppContent() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
         {renderView()}
       </main>
+      <Footer />
     </div>
   );
 }

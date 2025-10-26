@@ -1,6 +1,5 @@
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import {
   LayoutDashboard,
   Cpu,
@@ -9,8 +8,6 @@ import {
   Lightbulb,
   Settings,
   LogOut,
-  Moon,
-  Sun,
   Shield,
   Menu,
   X
@@ -25,8 +22,6 @@ interface NavbarProps {
 export default function Navbar({ currentView, onNavigate }: NavbarProps) {
   const { profile, signOut } = useAuth();
   const { t } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -54,9 +49,7 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-              {t('app.title')}
-            </h1>
+            <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{t('app.title')}</h1>
           </div>
 
           <div className="hidden md:flex items-center space-x-1">
@@ -82,35 +75,6 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
           </div>
 
           <div className="hidden md:flex items-center space-x-2">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            >
-              {theme === 'light' ? <Moon className="w-5 h-5" aria-hidden="true" /> : <Sun className="w-5 h-5" aria-hidden="true" />}
-            </button>
-
-            <button
-              onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              aria-label="Cambiar idioma"
-            >
-              <span className="sr-only">{t('settings.language')}</span>
-              <span className="text-sm font-medium">{language === 'es' ? 'ES' : 'EN'}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                // emitir evento global para mostrar/ocultar panel
-                const ev = new CustomEvent('toggleAccessibilityPanel', { detail: {} });
-                window.dispatchEvent(ev);
-              }}
-              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              aria-label="Accessibility options"
-            >
-              <Shield className="w-5 h-5" aria-hidden="true" />
-            </button>
-
             <button
               onClick={() => onNavigate('settings')}
               className={`p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
@@ -182,22 +146,6 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
             >
               <Settings className="w-5 h-5 mr-3" aria-hidden="true" />
               {t('nav.settings')}
-            </button>
-
-            <button
-              onClick={() => { setLanguage(language === 'es' ? 'en' : 'es'); setMobileMenuOpen(false); }}
-              className="w-full flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <span className="w-5 h-5 mr-3 flex items-center justify-center text-sm">{language === 'es' ? 'ES' : 'EN'}</span>
-              {language === 'es' ? 'Español' : 'English'}
-            </button>
-
-            <button
-              onClick={toggleTheme}
-              className="w-full flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {theme === 'light' ? <Moon className="w-5 h-5 mr-3" aria-hidden="true" /> : <Sun className="w-5 h-5 mr-3" aria-hidden="true" />}
-              {theme === 'light' ? t('settings.theme.dark') : t('settings.theme.light')}
             </button>
 
             <button

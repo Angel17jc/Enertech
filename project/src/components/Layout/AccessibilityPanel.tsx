@@ -1,6 +1,6 @@
 import { useAccessibility } from '../../contexts/AccessibilityContext';
 import { Plus, Minus, Eye, Volume2, ChevronLeft, SunMoon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -10,6 +10,7 @@ export default function AccessibilityPanel() {
   const { language, setLanguage } = useLanguage();
 
   const [open, setOpen] = useState(false);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   const readSelection = () => {
     const sel = window.getSelection();
@@ -23,15 +24,29 @@ export default function AccessibilityPanel() {
     setZoom(z);
   };
 
+  // small scroll listener to move the floating tab slightly as user scrolls
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || 0;
+      // map scroll to -80..80 px offset for the button
+      const offset = Math.max(-80, Math.min(80, Math.round(y * 0.06)));
+      setScrollOffset(offset);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <>
       {/* Floating tab */}
       <button
         aria-label="Abrir opciones de accesibilidad"
         onClick={() => setOpen((s) => !s)}
-        className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-3 shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        className="fixed right-4 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-top"
+        style={{ top: `calc(50% + ${scrollOffset}px)`, transition: 'top 120ms linear' }}
       >
-        <Eye className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        <Eye className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
       </button>
 
       {/* Drawer */}
