@@ -15,12 +15,13 @@ import Settings from './components/Settings/Settings';
 import Admin from './components/Admin/Admin';
 import { AccessibilityProvider } from './contexts/AccessibilityContext';
 import AccessibilityPanel from './components/Layout/AccessibilityPanel';
+import WelcomePanel from './components/Layout/WelcomePanel';
 
 function AppContent() {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
   const [isSignUp, setIsSignUp] = useState(false);
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState('inicio');
 
   if (loading) {
     return (
@@ -42,6 +43,8 @@ function AppContent() {
 
   const renderView = () => {
     switch (currentView) {
+      case 'inicio':
+        return <WelcomePanel />;
       case 'dashboard':
         return <Dashboard />;
       case 'devices':

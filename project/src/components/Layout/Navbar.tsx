@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
   Shield,
+  Home,
   Menu,
   X
 } from 'lucide-react';
@@ -25,6 +26,7 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
+    { id: 'inicio', icon: Home, label: t('nav.home') },
     { id: 'dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
     { id: 'devices', icon: Cpu, label: t('nav.devices') },
     { id: 'consumption', icon: BarChart3, label: t('nav.consumption') },
@@ -49,7 +51,16 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{t('app.title')}</h1>
+            <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              <button
+                type="button"
+                onClick={() => onNavigate('inicio')}
+                className="focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-md hover:opacity-90"
+                aria-label={t('nav.home')}
+              >
+                {t('app.title')}
+              </button>
+            </h1>
           </div>
 
           <div className="hidden md:flex items-center space-x-1">
@@ -94,6 +105,7 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
             >
               <LogOut className="w-5 h-5" aria-hidden="true" />
             </button>
+            {/* removed separate Inicio button; 'Inicio' is in the main nav items */}
           </div>
 
           <button
