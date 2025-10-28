@@ -11,7 +11,8 @@ import {
   Shield,
   Home,
   Menu,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -32,6 +33,7 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
     { id: 'consumption', icon: BarChart3, label: t('nav.consumption') },
     { id: 'goals', icon: Target, label: t('nav.goals') },
     { id: 'recommendations', icon: Lightbulb, label: t('nav.recommendations') },
+    { id: 'feedback', icon: MessageSquare, label: t('nav.feedback') },
   ];
 
   if (profile?.role === 'admin') {

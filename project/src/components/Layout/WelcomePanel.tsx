@@ -2,7 +2,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function WelcomePanel({ onNavigate }: { onNavigate?: (view: string) => void }) {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { t } = useLanguage();
 
   return (
@@ -14,17 +14,25 @@ export default function WelcomePanel({ onNavigate }: { onNavigate?: (view: strin
           </svg>
         </div>
         <div className="flex-1">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">{t('welcome.title')}{profile?.full_name ? `, ${profile.full_name}` : ''}!</h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t('welcome.subtitle')}</p>
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">{t('welcome.title')}!</h2>
+          {user ? (
+            <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('welcome.welcomeBack')}{profile?.full_name ? `, ${profile.full_name}` : ''}.
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t('welcome.subtitle')}</p>
+          )}
 
-          <div className="mt-4">
-            <button
-              onClick={() => onNavigate?.('signup')}
-              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg"
-            >
-              {t('welcome.cta')}
-            </button>
-          </div>
+          {!user && (
+            <div className="mt-4">
+              <button
+                onClick={() => onNavigate?.('signup')}
+                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg"
+              >
+                {t('welcome.cta')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -86,6 +94,14 @@ export default function WelcomePanel({ onNavigate }: { onNavigate?: (view: strin
       <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
         <p>Si quieres ayuda detallada, visita Ajustes → Documentación o contáctanos.</p>
       </div>
+
+      {user && (
+        <div className="mt-6">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            ¿Te gustaría compartir tu opinión? Ve a la sección de Comentarios.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

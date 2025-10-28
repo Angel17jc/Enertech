@@ -84,3 +84,21 @@ export interface ElectricityRate {
   valid_from: string;
   created_at: string;
 }
+
+export interface Feedback {
+  id: string;
+  user_id: string;
+  is_first_visit: boolean;
+  found_needed: boolean;
+  visit_reason?: string;
+  not_found_info?: string;
+  ease_of_use: 'veryEasy' | 'easy' | 'neutral' | 'difficult' | 'veryDifficult';
+  device_usage: '1-2' | '3-5' | '6-10' | '10+';
+  energy_savings_experience: 'excellent' | 'good' | 'fair' | 'poor' | 'veryPoor';
+  recommendations?: string;
+  general_comments?: string;
+  submitted_at: string;
+  created_at: string;
+  updated_at: string;
+  user?: Profile;
+}

@@ -1,7 +1,8 @@
 import { useState, FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Send } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 interface SignInProps {
   onToggle: () => void;
@@ -13,6 +14,8 @@ export default function SignIn({ onToggle }: SignInProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const { signIn } = useAuth();
   const { t } = useLanguage();
 
@@ -22,14 +25,27 @@ export default function SignIn({ onToggle }: SignInProps) {
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      if (isResetMode) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/reset-password'
+        });
+        if (error) throw error;
+        setResetSent(true);
+      } else {
+        await signIn(email, password);
+      }
     } catch (err) {
-      setError(t('auth.error'));
+      setError(isResetMode ? t('auth.resetError') : t('auth.error'));
     } finally {
       setLoading(false);
     }
   };
 
+  const toggleResetMode = () => {
+    setIsResetMode((s) => !s);
+    setError('');
+    setResetSent(false);
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-gray-900 dark:to-gray-800 px-4">
       <div className="max-w-md w-full">
@@ -68,45 +84,73 @@ export default function SignIn({ onToggle }: SignInProps) {
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('auth.password')}
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  className="w-full pr-12 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
-                  aria-required="true"
-                />
+            {!isResetMode && (
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('auth.password')}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    className="w-full pr-12 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
+                    aria-required="true"
+                  />
 
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-pressed={showPassword}
-                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    aria-pressed={showPassword}
+                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+            {resetSent && (
+              <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 rounded-lg">
+                {t('auth.resetSent')}
+              </div>
+            )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label={t('auth.signin')}
+              className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={isResetMode ? t('auth.resetPassword') : t('auth.signin')}
             >
-              {loading ? t('common.loading') : t('auth.signin')}
+              {loading ? (
+                t('common.loading')
+              ) : isResetMode ? (
+                <>
+                  <Send className="w-5 h-5" aria-hidden="true" />
+                  {t('auth.resetPassword')}
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-5 h-5" aria-hidden="true" />
+                  {t('auth.signin')}
+                </>
+              )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {isResetMode ? t('auth.backToLogin') : t('auth.forgotPassword')}{' '}
+                  <button
+                    onClick={toggleResetMode}
+                    className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium focus:outline-none focus:underline"
+                  >
+                    {isResetMode ? t('auth.signin') : t('auth.resetPassword')}
+                  </button>
+                </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {t('auth.noAccount')}{' '}
               <button

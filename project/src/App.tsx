@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -13,14 +13,22 @@ import Goals from './components/Goals/Goals';
 import Recommendations from './components/Recommendations/Recommendations';
 import Settings from './components/Settings/Settings';
 import Admin from './components/Admin/Admin';
+import Feedback from './components/Feedback/Feedback';
 import { AccessibilityProvider } from './contexts/AccessibilityContext';
 import AccessibilityPanel from './components/Layout/AccessibilityPanel';
 import WelcomePanel from './components/Layout/WelcomePanel';
 
 function AppContent() {
-  const { loading } = useAuth();
+  const { user, loading } = useAuth();
   const { t } = useLanguage();
   const [currentView, setCurrentView] = useState('inicio');
+
+  useEffect(() => {
+    // cuando el usuario se autentica, navegamos automáticamente a la vista inicio
+    if (user) {
+      setCurrentView('inicio');
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -54,6 +62,8 @@ function AppContent() {
         return <Settings />;
       case 'admin':
         return <Admin />;
+      case 'feedback':
+        return <Feedback />;
       default:
         return <Dashboard />;
     }
