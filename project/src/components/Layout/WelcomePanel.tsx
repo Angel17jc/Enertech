@@ -1,20 +1,30 @@
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Home, Cpu, BarChart3, Target, Lightbulb } from 'lucide-react';
 
-export default function WelcomePanel() {
+export default function WelcomePanel({ onNavigate }: { onNavigate?: (view: string) => void }) {
   const { profile } = useAuth();
   const { t } = useLanguage();
 
   return (
     <div className="w-full bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-4">
         <div className="w-14 h-14 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-          <Home className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+          <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M3 12l9-8 9 8v7a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-7z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
-        <div>
+        <div className="flex-1">
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">{t('welcome.title')}{profile?.full_name ? `, ${profile.full_name}` : ''}!</h2>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t('welcome.subtitle')}</p>
+
+          <div className="mt-4">
+            <button
+              onClick={() => onNavigate?.('signup')}
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              {t('welcome.cta')}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -23,8 +33,8 @@ export default function WelcomePanel() {
           <h3 className="font-medium text-gray-900 dark:text-white">{t('welcome.features.title')}</h3>
           <div className="mt-3 grid grid-cols-2 gap-4">
             <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-              <div className="p-2 bg-white dark:bg-gray-900 rounded-md shadow-sm">
-                <Cpu className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 rounded-md overflow-hidden shadow-sm bg-white dark:bg-gray-900 flex items-center justify-center">
+                <img src="https://images.unsplash.com/photo-1581091870622-3c3f1a3e8b57?auto=format&fit=crop&w=400&q=60" alt="Dispositivos" className="object-cover w-full h-full" />
               </div>
               <div>
                 <div className="text-sm font-medium">{t('welcome.features.devices.title')}</div>
@@ -33,8 +43,8 @@ export default function WelcomePanel() {
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-              <div className="p-2 bg-white dark:bg-gray-900 rounded-md shadow-sm">
-                <BarChart3 className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 rounded-md overflow-hidden shadow-sm bg-white dark:bg-gray-900 flex items-center justify-center">
+                <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=400&q=60" alt="Consumo" className="object-cover w-full h-full" />
               </div>
               <div>
                 <div className="text-sm font-medium">{t('welcome.features.consumption.title')}</div>
@@ -43,8 +53,8 @@ export default function WelcomePanel() {
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-              <div className="p-2 bg-white dark:bg-gray-900 rounded-md shadow-sm">
-                <Target className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 rounded-md overflow-hidden shadow-sm bg-white dark:bg-gray-900 flex items-center justify-center">
+                <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=400&q=60" alt="Metas" className="object-cover w-full h-full" />
               </div>
               <div>
                 <div className="text-sm font-medium">{t('welcome.features.goals.title')}</div>
@@ -53,8 +63,8 @@ export default function WelcomePanel() {
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-              <div className="p-2 bg-white dark:bg-gray-900 rounded-md shadow-sm">
-                <Lightbulb className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 rounded-md overflow-hidden shadow-sm bg-white dark:bg-gray-900 flex items-center justify-center">
+                <img src="https://images.unsplash.com/photo-1484496957711-3a7c2a9a6d2f?auto=format&fit=crop&w=400&q=60" alt="Recomendaciones" className="object-cover w-full h-full" />
               </div>
               <div>
                 <div className="text-sm font-medium">{t('welcome.features.recommendations.title')}</div>

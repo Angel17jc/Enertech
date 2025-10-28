@@ -18,9 +18,8 @@ import AccessibilityPanel from './components/Layout/AccessibilityPanel';
 import WelcomePanel from './components/Layout/WelcomePanel';
 
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   const { t } = useLanguage();
-  const [isSignUp, setIsSignUp] = useState(false);
   const [currentView, setCurrentView] = useState('inicio');
 
   if (loading) {
@@ -33,18 +32,14 @@ function AppContent() {
     );
   }
 
-  if (!user) {
-    return isSignUp ? (
-      <SignUp onToggle={() => setIsSignUp(false)} />
-    ) : (
-      <SignIn onToggle={() => setIsSignUp(true)} />
-    );
-  }
-
   const renderView = () => {
     switch (currentView) {
       case 'inicio':
-        return <WelcomePanel />;
+        return <WelcomePanel onNavigate={setCurrentView} />;
+      case 'login':
+        return <SignIn onToggle={() => setCurrentView('signup')} />;
+      case 'signup':
+        return <SignUp onToggle={() => setCurrentView('login')} />;
       case 'dashboard':
         return <Dashboard />;
       case 'devices':

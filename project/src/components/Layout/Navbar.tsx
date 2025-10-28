@@ -21,7 +21,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ currentView, onNavigate }: NavbarProps) {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, user } = useAuth();
   const { t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -86,26 +86,44 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
           </div>
 
           <div className="hidden md:flex items-center space-x-2">
-            <button
-              onClick={() => onNavigate('settings')}
-              className={`p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                currentView === 'settings'
-                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-              aria-label={t('nav.settings')}
-            >
-              <Settings className="w-5 h-5" aria-hidden="true" />
-            </button>
+            {user ? (
+              <>
+                <button
+                  onClick={() => onNavigate('settings')}
+                  className={`p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                    currentView === 'settings'
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  aria-label={t('nav.settings')}
+                >
+                  <Settings className="w-5 h-5" aria-hidden="true" />
+                </button>
 
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              aria-label={t('nav.logout')}
-            >
-              <LogOut className="w-5 h-5" aria-hidden="true" />
-            </button>
-            {/* removed separate Inicio button; 'Inicio' is in the main nav items */}
+                <button
+                  onClick={handleLogout}
+                  className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  aria-label={t('nav.logout')}
+                >
+                  <LogOut className="w-5 h-5" aria-hidden="true" />
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onNavigate('login')}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  {t('auth.signin')}
+                </button>
+                <button
+                  onClick={() => onNavigate('signup')}
+                  className="px-3 py-2 text-sm text-emerald-600 border border-emerald-200 rounded-md hover:bg-emerald-50"
+                >
+                  {t('auth.signup')}
+                </button>
+              </div>
+            )}
           </div>
 
           <button
@@ -145,28 +163,53 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
               );
             })}
 
-            <button
-              onClick={() => {
-                onNavigate('settings');
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center px-3 py-2 rounded-lg text-base font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                currentView === 'settings'
-                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              <Settings className="w-5 h-5 mr-3" aria-hidden="true" />
-              {t('nav.settings')}
-            </button>
+            {user ? (
+              <>
+                <button
+                  onClick={() => {
+                    onNavigate('settings');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center px-3 py-2 rounded-lg text-base font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                    currentView === 'settings'
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <Settings className="w-5 h-5 mr-3" aria-hidden="true" />
+                  {t('nav.settings')}
+                </button>
 
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <LogOut className="w-5 h-5 mr-3" aria-hidden="true" />
-              {t('nav.logout')}
-            </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <LogOut className="w-5 h-5 mr-3" aria-hidden="true" />
+                  {t('nav.logout')}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    onNavigate('login');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center px-3 py-2 rounded-lg text-base font-medium bg-emerald-600 text-white"
+                >
+                  {t('auth.signin')}
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('signup');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center px-3 py-2 rounded-lg text-base font-medium text-emerald-600 border border-emerald-100"
+                >
+                  {t('auth.signup')}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

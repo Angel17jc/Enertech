@@ -1,0 +1,1 @@
+Patch being applied: edits to LanguageContext.tsx, WelcomePanel.tsx, App.tsx to add CTA and navigation support.
