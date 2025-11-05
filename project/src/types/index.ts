@@ -5,6 +5,14 @@ export interface Profile {
   role: 'user' | 'admin';
   preferred_language: 'es' | 'en';
   theme: 'light' | 'dark';
+  avatar_url?: string | null;
+  phone?: string | null;
+  bio?: string | null;
+  timezone?: string | null;
+  birthdate?: string | null;
+  gender?: 'male' | 'female' | 'other' | null;
+  height_cm?: number | null;
+  weight_kg?: number | null;
   created_at: string;
   updated_at: string;
 }

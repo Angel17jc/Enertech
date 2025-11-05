@@ -12,6 +12,7 @@ import Consumption from './components/Consumption/Consumption';
 import Goals from './components/Goals/Goals';
 import Recommendations from './components/Recommendations/Recommendations';
 import Settings from './components/Settings/Settings';
+import Profile from './components/Profile/Profile';
 import Admin from './components/Admin/Admin';
 import Feedback from './components/Feedback/Feedback';
 import { AccessibilityProvider } from './contexts/AccessibilityContext';
@@ -59,7 +60,7 @@ function AppContent() {
       case 'recommendations':
         return <Recommendations />;
       case 'settings':
-        return <Settings />;
+        return <Profile />;
       case 'admin':
         return <Admin />;
       case 'feedback':

@@ -6,7 +6,7 @@ import {
   BarChart3,
   Target,
   Lightbulb,
-  Settings,
+  User,
   LogOut,
   Shield,
   Home,
@@ -97,9 +97,9 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
                       ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
-                  aria-label={t('nav.settings')}
-                >
-                  <Settings className="w-5 h-5" aria-hidden="true" />
+                    aria-label={t('nav.profile')}
+                  >
+                    <User className="w-5 h-5" aria-hidden="true" />
                 </button>
 
                 <button
@@ -178,8 +178,8 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
-                  <Settings className="w-5 h-5 mr-3" aria-hidden="true" />
-                  {t('nav.settings')}
+                  <User className="w-5 h-5 mr-3" aria-hidden="true" />
+                  {t('nav.profile')}
                 </button>
 
                 <button
