@@ -1,9 +1,55 @@
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function WelcomePanel({ onNavigate }: { onNavigate?: (view: string) => void }) {
   const { profile, user } = useAuth();
   const { t } = useLanguage();
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const interpreterRef = useRef<HTMLVideoElement | null>(null);
+  const [isMuted, setMuted] = useState(false);
+  const [isPlaying, setPlaying] = useState(false);
+  const [showInterpreter, setShowInterpreter] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(true);
+  const [visualAlert, setVisualAlert] = useState<string | null>(null);
+
+  const videoSrc = import.meta.env.VITE_INTRO_VIDEO || '/media/intro.mp4';
+  const captionsSrc = import.meta.env.VITE_INTRO_CAPTIONS || '/media/intro.vtt';
+  const interpreterSrc = import.meta.env.VITE_INTRO_INTERPRETER || '';
+  const transcriptText =
+    import.meta.env.VITE_INTRO_TRANSCRIPT ||
+    'Esta es una introducción rápida a Enertech: cómo navegar, usar los paneles y configurar accesibilidad.';
+
+  const togglePlay = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (vid.paused) {
+      vid.play();
+      setPlaying(true);
+    } else {
+      vid.pause();
+      setPlaying(false);
+    }
+  };
+
+  const toggleMute = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    vid.muted = !vid.muted;
+    setMuted(vid.muted);
+  };
+
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    const handleEnded = () => {
+      setPlaying(false);
+      setVisualAlert('El video terminó. Puedes reproducirlo de nuevo o leer la transcripción.');
+      setTimeout(() => setVisualAlert(null), 6000);
+    };
+    vid.addEventListener('ended', handleEnded);
+    return () => vid.removeEventListener('ended', handleEnded);
+  }, []);
 
   return (
     <div className="w-full bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
@@ -102,6 +148,103 @@ export default function WelcomePanel({ onNavigate }: { onNavigate?: (view: strin
           </p>
         </div>
       )}
+
+      {/* Bloque de introducción en video con accesibilidad multimedia */}
+      <section className="mt-8 border-t border-gray-200 dark:border-gray-800 pt-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Introducción en video</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Incluye subtítulos, transcripción, control de audio y un video-intérprete opcional.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={togglePlay}
+              className="px-3 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-sm"
+              aria-label={isPlaying ? 'Pausar video' : 'Reproducir video'}
+            >
+              {isPlaying ? 'Pausar' : 'Reproducir'}
+            </button>
+            <button
+              onClick={toggleMute}
+              className="px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm"
+              aria-label={isMuted ? 'Activar audio' : 'Silenciar audio'}
+            >
+              {isMuted ? 'Activar audio' : 'Silenciar'}
+            </button>
+          </div>
+        </div>
+
+        {visualAlert && (
+          <div className="rounded-md bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100 px-4 py-2 text-sm" role="status">
+            {visualAlert}
+          </div>
+        )}
+
+        <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm bg-black/70">
+          <video
+            ref={videoRef}
+            className="w-full"
+            controls
+            aria-label="Video introductorio de Enertech"
+            poster="/media/intro-poster.jpg"
+          >
+            <source src={videoSrc} type="video/mp4" />
+            <track kind="captions" src={captionsSrc} srcLang="es" label="Español" default />
+            Tu navegador no soporta la reproducción de video.
+          </video>
+
+          {showInterpreter && interpreterSrc && (
+            <div className="absolute bottom-4 right-4 w-48 h-32 rounded-lg overflow-hidden shadow-lg border-2 border-emerald-500 bg-black">
+              <video
+                ref={interpreterRef}
+                src={interpreterSrc}
+                className="w-full h-full object-cover"
+                muted
+                loop
+                autoPlay
+                playsInline
+                aria-label="Intérprete en lengua de señas"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => setShowTranscript((v) => !v)}
+            className="px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm"
+          >
+            {showTranscript ? 'Ocultar transcripción' : 'Ver transcripción'}
+          </button>
+          <button
+            onClick={() => setShowInterpreter((v) => !v)}
+            className="px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm"
+          >
+            {showInterpreter ? 'Ocultar intérprete' : 'Mostrar intérprete'}
+          </button>
+          <button
+            onClick={() => {
+              const vid = videoRef.current;
+              if (!vid) return;
+              vid.currentTime = 0;
+              vid.pause();
+              setPlaying(false);
+            }}
+            className="px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm"
+          >
+            Reiniciar
+          </button>
+        </div>
+
+        {showTranscript && (
+          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+            <p className="font-semibold text-gray-900 dark:text-white mb-1">Transcripción</p>
+            <p>{transcriptText}</p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

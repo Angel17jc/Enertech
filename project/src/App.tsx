@@ -18,6 +18,7 @@ import Feedback from './components/Feedback/Feedback';
 import { AccessibilityProvider } from './contexts/AccessibilityContext';
 import AccessibilityPanel from './components/Layout/AccessibilityPanel';
 import WelcomePanel from './components/Layout/WelcomePanel';
+import SupportChat from './components/Layout/SupportChat';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -101,6 +102,7 @@ function AppWithAccessibility() {
     <>
       <AppContent />
       <AccessibilityPanel />
+      <SupportChat />
     </>
   );
 }

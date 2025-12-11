@@ -12,9 +12,12 @@ import {
   Home,
   Menu,
   X,
-  MessageSquare
+  MessageSquare,
+  Search,
+  CornerDownLeft,
+  MousePointer2,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface NavbarProps {
   currentView: string;
@@ -25,6 +28,10 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
   const { profile, signOut, user } = useAuth();
   const { t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [highlightIndex, setHighlightIndex] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [showQuickActions, setShowQuickActions] = useState(false);
 
   const navItems = [
     { id: 'inicio', icon: Home, label: t('nav.home') },
@@ -40,6 +47,17 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
     navItems.push({ id: 'admin', icon: Shield, label: t('nav.admin') });
   }
 
+  const quickActions = useMemo(
+    () => [
+      { id: 'settings', label: t('nav.profile'), action: () => onNavigate('settings') },
+      { id: 'feedback', label: t('nav.feedback'), action: () => onNavigate('feedback') },
+      ...(profile?.role === 'admin'
+        ? [{ id: 'admin', label: t('nav.admin'), action: () => onNavigate('admin') }]
+        : []),
+    ],
+    [onNavigate, profile?.role, t]
+  );
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -47,6 +65,38 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
       console.error('Error signing out:', error);
     }
   };
+
+  const filtered = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return navItems;
+    return navItems.filter((item) => item.label.toLowerCase().includes(term) || item.id.toLowerCase().includes(term));
+  }, [navItems, searchTerm]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        setMobileMenuOpen(true);
+      }
+      if (e.key === 'ArrowDown' && filtered.length > 0) {
+        setHighlightIndex((idx) => Math.min(filtered.length - 1, idx + 1));
+      }
+      if (e.key === 'ArrowUp' && filtered.length > 0) {
+        setHighlightIndex((idx) => Math.max(0, idx - 1));
+      }
+      if (e.key === 'Enter' && document.activeElement === searchInputRef.current && filtered[highlightIndex]) {
+        onNavigate(filtered[highlightIndex].id);
+        setSearchTerm('');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [filtered, highlightIndex, onNavigate]);
+
+  useEffect(() => {
+    setHighlightIndex(0);
+  }, [searchTerm]);
 
   return (
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50" role="navigation" aria-label="Main navigation">
@@ -66,7 +116,7 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
           </div>
 
           <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => {
+            {(searchTerm ? filtered : navItems).map((item) => {
               const Icon = item.icon;
               const isActive = currentView === item.id;
               return (
@@ -87,7 +137,87 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
             })}
           </div>
 
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden md:flex items-center space-x-3">
+            <div className="relative w-64">
+              <label className="sr-only" htmlFor="global-search">Buscar</label>
+              <div className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2 py-1.5 focus-within:ring-2 focus-within:ring-emerald-500">
+                <Search className="w-4 h-4 text-gray-500" aria-hidden="true" />
+                <input
+                  id="global-search"
+                  ref={searchInputRef}
+                  type="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar o ir (Ctrl+K)"
+                  className="bg-transparent text-sm text-gray-800 dark:text-gray-200 w-full focus:outline-none"
+                />
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">Ctrl+K</span>
+              </div>
+              {searchTerm && (
+                <div className="absolute mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-auto z-50">
+                  {filtered.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">Sin resultados</div>
+                  )}
+                  {filtered.map((item, idx) => {
+                    const Icon = item.icon;
+                    const isActive = idx === highlightIndex;
+                    return (
+                      <button
+                        key={item.id}
+                        onMouseEnter={() => setHighlightIndex(idx)}
+                        onClick={() => {
+                          onNavigate(item.id);
+                          setSearchTerm('');
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left ${
+                          isActive ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-200' : 'text-gray-800 dark:text-gray-200'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" aria-hidden="true" />
+                        <span>{item.label}</span>
+                        <span className="ml-auto text-[11px] text-gray-400">{item.id}</span>
+                      </button>
+                    );
+                  })}
+                  <div className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 text-xs text-gray-500 flex items-center gap-1">
+                    <CornerDownLeft className="w-3 h-3" /> Enter para ir
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <button
+                className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 flex items-center gap-1"
+                aria-haspopup="true"
+                aria-expanded={showQuickActions}
+                onClick={() => setShowQuickActions((v) => !v)}
+              >
+                <MousePointer2 className="w-4 h-4" aria-hidden="true" />
+                <span className="text-sm">Accesos</span>
+              </button>
+              {showQuickActions && (
+                <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+                  <div className="px-3 py-2 text-xs text-gray-500">Atajos de menú</div>
+                  {quickActions.map((qa) => (
+                    <button
+                      key={qa.id}
+                      onClick={() => {
+                        qa.action();
+                        setShowQuickActions(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      {qa.label}
+                    </button>
+                  ))}
+                  <div className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 text-xs text-gray-500">
+                    Usa Ctrl+K y flechas para navegar con teclado.
+                  </div>
+                </div>
+              )}
+            </div>
+
             {user ? (
               <>
                 <button
@@ -141,7 +271,19 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
 
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div className="px-2 pt-2 pb-3 space-y-1">
+          <div className="px-3 pt-3 pb-3 space-y-2">
+            <div className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">
+              <Search className="w-4 h-4 text-gray-500" aria-hidden="true" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar o ir (Ctrl+K)"
+                className="bg-transparent text-sm text-gray-800 dark:text-gray-200 w-full focus:outline-none"
+              />
+            </div>
+          </div>
+          <div className="px-2 pb-3 space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentView === item.id;

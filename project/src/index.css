@@ -10,7 +10,8 @@
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    line-height: 1.5;
+    line-height: var(--a11y-line-height, 1.5);
+    letter-spacing: var(--a11y-letter-spacing, 0px);
   }
 
   html {
@@ -38,6 +39,34 @@
   textarea:focus-visible,
   select:focus-visible {
     @apply outline-none ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-gray-900;
+  }
+
+  body.a11y-link-highlight a {
+    @apply underline decoration-4 decoration-emerald-500;
+    outline: 2px solid rgba(16, 185, 129, 0.6);
+    outline-offset: 2px;
+  }
+
+  body.a11y-keyboard-nav :focus-visible {
+    @apply ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-gray-900;
+  }
+
+  body.a11y-large-buttons button,
+  body.a11y-large-buttons [role="button"],
+  body.a11y-large-buttons input[type="submit"],
+  body.a11y-large-buttons input[type="button"] {
+    font-size: 1.05rem;
+    padding: 0.85rem 1.2rem;
+    min-height: 3rem;
+    border-radius: 0.8rem;
+  }
+
+  body.a11y-large-buttons input,
+  body.a11y-large-buttons select,
+  body.a11y-large-buttons textarea {
+    font-size: 1.05rem;
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
   }
 
   ::-webkit-scrollbar {
