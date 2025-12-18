@@ -180,14 +180,6 @@ export default function Navbar() {
                           <MessageSquare className="w-4 h-4" aria-hidden="true" />
                           {t('nav.feedback')}
                         </button>
-                        <button
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => handleNavigate('/recommendations')}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border-t border-gray-100 dark:border-gray-700"
-                        >
-                          <Lightbulb className="w-4 h-4" aria-hidden="true" />
-                          {t('nav.recommendations')}
-                        </button>
                       </div>
                     )}
                   </div>
@@ -226,14 +218,6 @@ export default function Navbar() {
                         >
                           <Target className="w-4 h-4" aria-hidden="true" />
                           {t('nav.goals')}
-                        </button>
-                        <button
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => handleNavigate('/consumption')}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border-t border-gray-100 dark:border-gray-700"
-                        >
-                          <BarChart3 className="w-4 h-4" aria-hidden="true" />
-                          {t('nav.consumption')}
                         </button>
                       </div>
                     )}
