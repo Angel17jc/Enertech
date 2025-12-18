@@ -5,12 +5,14 @@ import { supabase } from '../../lib/supabase';
 import { EnergyGoal, ConsumptionRecord } from '../../types';
 import { Plus, Target } from 'lucide-react';
 import GoalForm from './GoalForm';
+import { withTimeout } from '../../utils/withTimeout';
 
 export default function Goals() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [goals, setGoals] = useState<EnergyGoal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [consumptionMap, setConsumptionMap] = useState<Record<string, number>>({});
 
@@ -21,35 +23,53 @@ export default function Goals() {
   }, [user]);
 
   const loadGoals = async () => {
+    if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('energy_goals')
-      .select('*')
-      .eq('user_id', user!.id)
-      .order('created_at', { ascending: false });
+    setError(null);
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('energy_goals')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        10000
+      );
 
-    if (!error && data) {
-      setGoals(data);
-      await loadConsumptionForGoals(data);
+      if (!error && data) {
+        setGoals(data);
+        await loadConsumptionForGoals(data);
+      }
+    } catch (err) {
+      console.error('Error loading goals', err);
+      setError(t('common.error'));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const loadConsumptionForGoals = async (goalsData: EnergyGoal[]) => {
     const map: Record<string, number> = {};
 
     for (const goal of goalsData) {
-      const { data } = await supabase
-        .from('consumption_records')
-        .select('kwh_consumed')
-        .eq('user_id', user!.id)
-        .gte('date', goal.start_date)
-        .lte('date', goal.end_date);
+      try {
+        const { data } = await withTimeout(
+          supabase
+            .from('consumption_records')
+            .select('kwh_consumed')
+            .eq('user_id', user!.id)
+            .gte('date', goal.start_date)
+            .lte('date', goal.end_date),
+          10000
+        );
 
-      if (data) {
-        const rows = (data as Pick<ConsumptionRecord, 'kwh_consumed'>[]) ?? [];
-        const total = rows.reduce((sum, record) => sum + Number(record.kwh_consumed ?? 0), 0);
-        map[goal.id] = total;
+        if (data) {
+          const rows = (data as Pick<ConsumptionRecord, 'kwh_consumed'>[]) ?? [];
+          const total = rows.reduce((sum, record) => sum + Number(record.kwh_consumed ?? 0), 0);
+          map[goal.id] = total;
+        }
+      } catch (err) {
+        console.error('Error loading consumption for goal', goal.id, err);
       }
     }
 
@@ -85,6 +105,14 @@ export default function Goals() {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-live="polite">
         <div className="text-gray-600 dark:text-gray-400">{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600 dark:text-red-400">
+        {error}
       </div>
     );
   }

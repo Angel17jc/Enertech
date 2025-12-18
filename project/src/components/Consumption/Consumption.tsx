@@ -5,12 +5,14 @@ import { supabase } from '../../lib/supabase';
 import { ConsumptionRecord } from '../../types';
 import { Plus, Edit2, Trash2, BarChart3 } from 'lucide-react';
 import ConsumptionForm from './ConsumptionForm';
+import { withTimeout } from '../../utils/withTimeout';
 
 export default function Consumption() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [records, setRecords] = useState<ConsumptionRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ConsumptionRecord | null>(null);
 
@@ -21,17 +23,28 @@ export default function Consumption() {
   }, [user]);
 
   const loadRecords = async () => {
+    if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('consumption_records')
-      .select('*')
-      .eq('user_id', user!.id)
-      .order('date', { ascending: false });
+    setError(null);
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('consumption_records')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false }),
+        10000
+      );
 
-    if (!error && data) {
-      setRecords(data);
+      if (!error && data) {
+        setRecords(data);
+      }
+    } catch (err) {
+      console.error('Error loading consumption records', err);
+      setError(t('common.error'));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -56,6 +69,14 @@ export default function Consumption() {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-live="polite">
         <div className="text-gray-600 dark:text-gray-400">{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600 dark:text-red-400">
+        {error}
       </div>
     );
   }

@@ -5,11 +5,13 @@ import { supabase } from '../../lib/supabase';
 import { ConsumptionRecord } from '../../types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Zap, TrendingDown, Calendar, Activity } from 'lucide-react';
+import { withTimeout } from '../../utils/withTimeout';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [consumptionData, setConsumptionData] = useState<ConsumptionRecord[]>([]);
   const [stats, setStats] = useState({
     totalConsumption: 0,
@@ -25,58 +27,60 @@ export default function Dashboard() {
   }, [user]);
 
   const loadDashboardData = async () => {
+    if (!user) return;
     setLoading(true);
+    setError(null);
 
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const [consumptionRes, devicesRes, goalsRes] = await Promise.all([
-      supabase
-        .from('consumption_records')
-        .select('*')
-        .eq('user_id', user!.id)
-        .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
-        .order('date', { ascending: true }),
-      supabase
-        .from('devices')
-        .select('*')
-        .eq('user_id', user!.id)
-        .eq('is_active', true),
-      supabase
-        .from('energy_goals')
-        .select('*')
-        .eq('user_id', user!.id)
-        .eq('status', 'active'),
-    ]);
+      const [consumptionRes, devicesRes, goalsRes] = await withTimeout(
+        Promise.all([
+          supabase
+            .from('consumption_records')
+            .select('*')
+            .eq('user_id', user.id)
+            .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
+            .order('date', { ascending: true }),
+          supabase.from('devices').select('*').eq('user_id', user.id).eq('is_active', true),
+          supabase.from('energy_goals').select('*').eq('user_id', user.id).eq('status', 'active'),
+        ]),
+        10000
+      );
 
-    if (consumptionRes.data) {
-      const consumptionRows = (consumptionRes.data as ConsumptionRecord[]) ?? [];
-      setConsumptionData(consumptionRows);
-      const total = consumptionRows.reduce((sum, record) => sum + Number(record.kwh_consumed), 0);
-      const avg = consumptionRows.length > 0 ? total / consumptionRows.length : 0;
+      if (consumptionRes.data) {
+        const consumptionRows = (consumptionRes.data as ConsumptionRecord[]) ?? [];
+        setConsumptionData(consumptionRows);
+        const total = consumptionRows.reduce((sum, record) => sum + Number(record.kwh_consumed), 0);
+        const avg = consumptionRows.length > 0 ? total / consumptionRows.length : 0;
 
-      setStats((prev) => ({
-        ...prev,
-        totalConsumption: total,
-        avgDaily: avg,
-      }));
+        setStats((prev) => ({
+          ...prev,
+          totalConsumption: total,
+          avgDaily: avg,
+        }));
+      }
+
+      if (devicesRes.data) {
+        setStats((prev) => ({
+          ...prev,
+          activeDevices: devicesRes.data.length,
+        }));
+      }
+
+      if (goalsRes.data) {
+        setStats((prev) => ({
+          ...prev,
+          activeGoals: goalsRes.data.length,
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data', error);
+      setError(t('common.error'));
+    } finally {
+      setLoading(false);
     }
-
-    if (devicesRes.data) {
-      setStats((prev) => ({
-        ...prev,
-        activeDevices: devicesRes.data.length,
-      }));
-    }
-
-    if (goalsRes.data) {
-      setStats((prev) => ({
-        ...prev,
-        activeGoals: goalsRes.data.length,
-      }));
-    }
-
-    setLoading(false);
   };
 
   const chartData = consumptionData.map((record) => ({
@@ -88,6 +92,14 @@ export default function Dashboard() {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-live="polite">
         <div className="text-gray-600 dark:text-gray-400">{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600 dark:text-red-400">
+        {error}
       </div>
     );
   }

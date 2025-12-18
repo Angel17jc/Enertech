@@ -42,8 +42,11 @@ export default function Navbar() {
   const [showConsumptionMenu, setShowConsumptionMenu] = useState(false);
 
   const navItems = useMemo<NavItem[]>(() => {
+    const base: NavItem[] = [{ id: 'inicio', path: '/', icon: Home, label: t('nav.home') }];
+    if (!user) return base;
+
     const items: NavItem[] = [
-      { id: 'inicio', path: '/', icon: Home, label: t('nav.home') },
+      ...base,
       { id: 'dashboard', path: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
       { id: 'devices', path: '/devices', icon: Cpu, label: t('nav.devices') },
       { id: 'consumption', path: '/consumption', icon: BarChart3, label: t('nav.consumption') },
@@ -56,16 +59,19 @@ export default function Navbar() {
       items.push({ id: 'admin', path: '/admin', icon: Shield, label: t('nav.admin') });
     }
     return items;
-  }, [profile?.role, t]);
+  }, [profile?.role, t, user]);
 
-  const quickActions = useMemo(
-    () => [
+  const quickActions = useMemo(() => {
+    if (!user) return [];
+    const actions = [
       { id: 'settings', label: t('nav.profile'), path: '/settings' },
       { id: 'feedback', label: t('nav.feedback'), path: '/feedback' },
-      ...(profile?.role === 'admin' ? [{ id: 'admin', label: t('nav.admin'), path: '/admin' }] : []),
-    ],
-    [profile?.role, t]
-  );
+    ];
+    if (profile?.role === 'admin') {
+      actions.push({ id: 'admin', label: t('nav.admin'), path: '/admin' });
+    }
+    return actions;
+  }, [profile?.role, t, user]);
 
   const handleNavigate = useCallback((path: string) => {
     setSearchTerm('');
@@ -290,34 +296,36 @@ export default function Navbar() {
               )}
             </div>
 
-            <div className="relative">
-              <button
-                className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 flex items-center gap-1"
-                aria-haspopup="true"
-                aria-expanded={showQuickActions}
-                onClick={() => setShowQuickActions((v) => !v)}
-              >
-                <MousePointer2 className="w-4 h-4" aria-hidden="true" />
-                <span className="text-sm">Accesos</span>
-              </button>
-              {showQuickActions && (
-                <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-                  <div className="px-3 py-2 text-xs text-gray-500">Atajos de menú</div>
-                  {quickActions.map((qa) => (
-                    <button
-                      key={qa.id}
-                      onClick={() => handleNavigate(qa.path)}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      {qa.label}
-                    </button>
-                  ))}
-                  <div className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 text-xs text-gray-500">
-                    Usa Ctrl+K y flechas para navegar con teclado.
+            {quickActions.length > 0 && (
+              <div className="relative">
+                <button
+                  className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 flex items-center gap-1"
+                  aria-haspopup="true"
+                  aria-expanded={showQuickActions}
+                  onClick={() => setShowQuickActions((v) => !v)}
+                >
+                  <MousePointer2 className="w-4 h-4" aria-hidden="true" />
+                  <span className="text-sm">Accesos</span>
+                </button>
+                {showQuickActions && (
+                  <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+                    <div className="px-3 py-2 text-xs text-gray-500">Atajos de menú</div>
+                    {quickActions.map((qa) => (
+                      <button
+                        key={qa.id}
+                        onClick={() => handleNavigate(qa.path)}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        {qa.label}
+                      </button>
+                    ))}
+                    <div className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 text-xs text-gray-500">
+                      Usa Ctrl+K y flechas para navegar con teclado.
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {user ? (
               <>

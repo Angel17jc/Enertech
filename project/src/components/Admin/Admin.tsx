@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 import { Shield, Users, Zap } from 'lucide-react';
+import { withTimeout } from '../../utils/withTimeout';
 import { ConsumptionRecord } from '../../types';
 
 interface FeedbackItem {
@@ -21,6 +22,7 @@ export default function Admin() {
   });
   const [users, setUsers] = useState<any[]>([]);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadAdminData();
@@ -28,53 +30,68 @@ export default function Admin() {
 
   const loadAdminData = async () => {
     setLoading(true);
+    setError(null);
 
-    const [profilesRes, consumptionRes, feedbackRes] = await Promise.all([
-      supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-      supabase.from('consumption_records').select('kwh_consumed'),
-      // fetch feedbacks with profile name via simple select; if not available, we'll map later
-      supabase.from('feedback').select('id, user_id, message, created_at').order('created_at', { ascending: false }),
-    ]);
+    try {
+      const [profilesRes, consumptionRes, feedbackRes] = await withTimeout(
+        Promise.all([
+          supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+          supabase.from('consumption_records').select('kwh_consumed'),
+          supabase.from('feedback').select('id, user_id, message, created_at').order('created_at', { ascending: false }),
+        ]),
+        10000
+      );
 
-    if (profilesRes.data) {
-      setUsers(profilesRes.data);
-      setStats((prev) => ({
-        ...prev,
-        totalUsers: profilesRes.data.length,
-      }));
+      if (profilesRes.data) {
+        setUsers(profilesRes.data);
+        setStats((prev) => ({
+          ...prev,
+          totalUsers: profilesRes.data.length,
+        }));
+      }
+
+      if (consumptionRes.data) {
+        const rows = (consumptionRes.data as Pick<ConsumptionRecord, 'kwh_consumed'>[]) ?? [];
+        const total = rows.reduce((sum, record) => sum + Number(record.kwh_consumed ?? 0), 0);
+        setStats((prev) => ({
+          ...prev,
+          totalConsumption: total,
+        }));
+      }
+
+      if (feedbackRes.data) {
+        const feedbackList: FeedbackItem[] = feedbackRes.data.map((f: any) => {
+          const profile = profilesRes.data?.find((p: any) => p.id === f.user_id);
+          return {
+            id: f.id,
+            user_id: f.user_id,
+            message: f.message,
+            created_at: f.created_at,
+            profile_full_name: profile?.full_name,
+          } as FeedbackItem;
+        });
+        setFeedbacks(feedbackList);
+      }
+    } catch (error) {
+      console.error('Error loading admin data', error);
+      setError(t('common.error'));
+    } finally {
+      setLoading(false);
     }
-
-    if (consumptionRes.data) {
-      const rows = (consumptionRes.data as Pick<ConsumptionRecord, 'kwh_consumed'>[]) ?? [];
-      const total = rows.reduce((sum, record) => sum + Number(record.kwh_consumed ?? 0), 0);
-      setStats((prev) => ({
-        ...prev,
-        totalConsumption: total,
-      }));
-    }
-
-    if (feedbackRes.data) {
-      // Map feedbacks; try to resolve user full name from profilesRes data
-      const feedbackList: FeedbackItem[] = feedbackRes.data.map((f: any) => {
-        const profile = profilesRes.data?.find((p: any) => p.id === f.user_id);
-        return {
-          id: f.id,
-          user_id: f.user_id,
-          message: f.message,
-          created_at: f.created_at,
-          profile_full_name: profile?.full_name,
-        } as FeedbackItem;
-      });
-      setFeedbacks(feedbackList);
-    }
-
-    setLoading(false);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-live="polite">
         <div className="text-gray-600 dark:text-gray-400">{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600 dark:text-red-400">
+        {error}
       </div>
     );
   }

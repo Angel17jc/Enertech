@@ -4,12 +4,14 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 import { Recommendation, UserRecommendation } from '../../types';
 import { Lightbulb, CheckCircle, XCircle } from 'lucide-react';
+import { withTimeout } from '../../utils/withTimeout';
 
 export default function Recommendations() {
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const [recommendations, setRecommendations] = useState<(Recommendation & { userStatus?: string })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -18,30 +20,39 @@ export default function Recommendations() {
   }, [user]);
 
   const loadRecommendations = async () => {
+    if (!user) return;
     setLoading(true);
-
-    const { data: allRecs } = await supabase
-      .from('recommendations')
-      .select('*')
-      .eq('is_active', true);
-
-    const { data: userRecs } = await supabase
-      .from('user_recommendations')
-      .select('*')
-      .eq('user_id', user!.id);
-
-    if (allRecs) {
-      const userRecsMap = new Map(
-        (userRecs ?? []).map((ur: UserRecommendation) => [ur.recommendation_id, ur.status] as const)
+    setError(null);
+    try {
+      const { data: allRecs } = await withTimeout(
+        supabase.from('recommendations').select('*').eq('is_active', true),
+        10000
       );
-      const enriched = allRecs.map((rec: Recommendation) => ({
-        ...rec,
-        userStatus: userRecsMap.get(rec.id) || 'pending',
-      }));
-      setRecommendations(enriched);
-    }
 
-    setLoading(false);
+      const { data: userRecs } = await withTimeout(
+        supabase
+          .from('user_recommendations')
+          .select('*')
+          .eq('user_id', user.id),
+        10000
+      );
+
+      if (allRecs) {
+        const userRecsMap = new Map(
+          (userRecs ?? []).map((ur: UserRecommendation) => [ur.recommendation_id, ur.status] as const)
+        );
+        const enriched = allRecs.map((rec: Recommendation) => ({
+          ...rec,
+          userStatus: userRecsMap.get(rec.id) || 'pending',
+        }));
+        setRecommendations(enriched);
+      }
+    } catch (error) {
+      console.error('Error loading recommendations', error);
+      setError(t('common.error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateStatus = async (recId: string, status: 'applied' | 'dismissed') => {
@@ -83,6 +94,14 @@ export default function Recommendations() {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-live="polite">
         <div className="text-gray-600 dark:text-gray-400">{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600 dark:text-red-400">
+        {error}
       </div>
     );
   }

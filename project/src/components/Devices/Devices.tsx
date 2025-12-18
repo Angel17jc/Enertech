@@ -5,12 +5,14 @@ import { supabase } from '../../lib/supabase';
 import { Device } from '../../types';
 import { Plus, Edit2, Trash2, Power } from 'lucide-react';
 import DeviceForm from './DeviceForm';
+import { withTimeout } from '../../utils/withTimeout';
 
 export default function Devices() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [ratePerKwh, setRatePerKwh] = useState(0.12);
@@ -23,28 +25,47 @@ export default function Devices() {
   }, [user]);
 
   const loadDevices = async () => {
+    if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('devices')
-      .select('*')
-      .eq('user_id', user!.id)
-      .order('created_at', { ascending: false });
+    setError(null);
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('devices')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        10000
+      );
 
-    if (!error && data) {
-      setDevices(data);
+      if (!error && data) {
+        setDevices(data);
+      }
+    } catch (err) {
+      console.error('Error loading devices', err);
+      setError(t('common.error'));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const loadRate = async () => {
-    const { data } = await supabase
-      .from('electricity_rates')
-      .select('cost_per_kwh')
-      .eq('is_default', true)
-      .maybeSingle();
+    if (!user) return;
+    try {
+      const { data } = await withTimeout(
+        supabase
+          .from('electricity_rates')
+          .select('cost_per_kwh')
+          .eq('is_default', true)
+          .maybeSingle(),
+        10000
+      );
 
-    if (data) {
-      setRatePerKwh(Number(data.cost_per_kwh));
+      if (data) {
+        setRatePerKwh(Number(data.cost_per_kwh));
+      }
+    } catch (err) {
+      console.error('Error loading rate', err);
     }
   };
 
@@ -79,6 +100,14 @@ export default function Devices() {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-live="polite">
         <div className="text-gray-600 dark:text-gray-400">{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600 dark:text-red-400">
+        {error}
       </div>
     );
   }
