@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 
-export default function WelcomePanel({ onNavigate }: { onNavigate?: (view: string) => void }) {
+export default function WelcomePanel() {
   const { profile, user } = useAuth();
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -12,6 +13,7 @@ export default function WelcomePanel({ onNavigate }: { onNavigate?: (view: strin
   const [showInterpreter, setShowInterpreter] = useState(false);
   const [showTranscript, setShowTranscript] = useState(true);
   const [visualAlert, setVisualAlert] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const videoSrc = import.meta.env.VITE_INTRO_VIDEO || '/media/intro.mp4';
   const captionsSrc = import.meta.env.VITE_INTRO_CAPTIONS || '/media/intro.vtt';
@@ -72,7 +74,7 @@ export default function WelcomePanel({ onNavigate }: { onNavigate?: (view: strin
           {!user && (
             <div className="mt-4">
               <button
-                onClick={() => onNavigate?.('signup')}
+                onClick={() => navigate('/signup')}
                 className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg"
               >
                 {t('welcome.cta')}

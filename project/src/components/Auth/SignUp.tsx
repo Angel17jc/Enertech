@@ -1,13 +1,10 @@
 import { useState, FormEvent, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { UserPlus, Eye, EyeOff, Check, X } from 'lucide-react';
 
-interface SignUpProps {
-  onToggle: () => void;
-}
-
-export default function SignUp({ onToggle }: SignUpProps) {
+export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +13,7 @@ export default function SignUp({ onToggle }: SignUpProps) {
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -24,6 +22,7 @@ export default function SignUp({ onToggle }: SignUpProps) {
 
     try {
       await signUp(email, password, fullName);
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(t('auth.error'));
     } finally {
@@ -190,7 +189,7 @@ export default function SignUp({ onToggle }: SignUpProps) {
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {t('auth.already')}{' '}
               <button
-                onClick={onToggle}
+                onClick={() => navigate('/login')}
                 className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium focus:outline-none focus:underline"
               >
                 {t('auth.signInHere')}

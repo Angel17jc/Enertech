@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
-import { Recommendation } from '../../types';
+import { Recommendation, UserRecommendation } from '../../types';
 import { Lightbulb, CheckCircle, XCircle } from 'lucide-react';
 
 export default function Recommendations() {
@@ -31,8 +31,10 @@ export default function Recommendations() {
       .eq('user_id', user!.id);
 
     if (allRecs) {
-      const userRecsMap = new Map(userRecs?.map((ur) => [ur.recommendation_id, ur.status]));
-      const enriched = allRecs.map((rec) => ({
+      const userRecsMap = new Map(
+        (userRecs ?? []).map((ur: UserRecommendation) => [ur.recommendation_id, ur.status] as const)
+      );
+      const enriched = allRecs.map((rec: Recommendation) => ({
         ...rec,
         userStatus: userRecsMap.get(rec.id) || 'pending',
       }));

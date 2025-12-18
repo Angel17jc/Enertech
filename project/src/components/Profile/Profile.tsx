@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { User as UserIcon, Upload, Loader2 } from 'lucide-react';
 
 export default function Profile() {
-  const { profile, refreshProfile, user } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { t } = useLanguage();
 
   const fileInputRef = useRef<HTMLInputElement>(null);

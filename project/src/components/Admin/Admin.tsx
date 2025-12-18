@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 import { Shield, Users, Zap } from 'lucide-react';
+import { ConsumptionRecord } from '../../types';
 
 interface FeedbackItem {
   id: string;
@@ -44,7 +45,8 @@ export default function Admin() {
     }
 
     if (consumptionRes.data) {
-      const total = consumptionRes.data.reduce((sum, record) => sum + Number(record.kwh_consumed), 0);
+      const rows = (consumptionRes.data as Pick<ConsumptionRecord, 'kwh_consumed'>[]) ?? [];
+      const total = rows.reduce((sum, record) => sum + Number(record.kwh_consumed ?? 0), 0);
       setStats((prev) => ({
         ...prev,
         totalConsumption: total,

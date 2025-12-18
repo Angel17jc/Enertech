@@ -33,6 +33,7 @@ type Accessibility = {
 };
 
 type RecognitionEvent = Event & { results: SpeechRecognitionResultList; resultIndex: number };
+type SpeechRecognitionErrorEvent = Event & { error?: string; message?: string; type: string };
 
 const defaultState: Accessibility = {
   zoom: 1,
@@ -224,14 +225,16 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     const originalScrollIntoView = Element.prototype.scrollIntoView;
     const originalPlay = HTMLMediaElement.prototype.play;
 
-    window.scrollTo = (...args: Parameters<typeof window.scrollTo>) => {
+    const guardedScrollTo: typeof window.scrollTo = (...args) => {
       if (!allowBecauseUser()) return;
       return originalScrollTo(...args);
     };
-    window.scrollBy = (...args: Parameters<typeof window.scrollBy>) => {
+    const guardedScrollBy: typeof window.scrollBy = (...args) => {
       if (!allowBecauseUser()) return;
       return originalScrollBy(...args);
     };
+    window.scrollTo = guardedScrollTo;
+    window.scrollBy = guardedScrollBy;
     Element.prototype.scrollIntoView = function (...args: Parameters<Element['scrollIntoView']>) {
       if (!allowBecauseUser()) return;
       return originalScrollIntoView.apply(this, args);

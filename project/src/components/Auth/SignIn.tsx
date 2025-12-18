@@ -1,14 +1,11 @@
 import { useState, FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { LogIn, Eye, EyeOff, Send } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
-interface SignInProps {
-  onToggle: () => void;
-}
-
-export default function SignIn({ onToggle }: SignInProps) {
+export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +15,7 @@ export default function SignIn({ onToggle }: SignInProps) {
   const [resetSent, setResetSent] = useState(false);
   const { signIn } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -33,6 +31,7 @@ export default function SignIn({ onToggle }: SignInProps) {
         setResetSent(true);
       } else {
         await signIn(email, password);
+        navigate('/dashboard', { replace: true });
       }
     } catch (err) {
       setError(isResetMode ? t('auth.resetError') : t('auth.error'));
@@ -154,7 +153,7 @@ export default function SignIn({ onToggle }: SignInProps) {
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {t('auth.noAccount')}{' '}
               <button
-                onClick={onToggle}
+                onClick={() => navigate('/signup')}
                 className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium focus:outline-none focus:underline"
               >
                 {t('auth.signUpHere')}

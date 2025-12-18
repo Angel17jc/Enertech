@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
-import { EnergyGoal } from '../../types';
+import { EnergyGoal, ConsumptionRecord } from '../../types';
 import { Plus, Target } from 'lucide-react';
 import GoalForm from './GoalForm';
 
@@ -47,7 +47,8 @@ export default function Goals() {
         .lte('date', goal.end_date);
 
       if (data) {
-        const total = data.reduce((sum, record) => sum + Number(record.kwh_consumed), 0);
+        const rows = (data as Pick<ConsumptionRecord, 'kwh_consumed'>[]) ?? [];
+        const total = rows.reduce((sum, record) => sum + Number(record.kwh_consumed ?? 0), 0);
         map[goal.id] = total;
       }
     }

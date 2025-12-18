@@ -50,9 +50,10 @@ export default function Dashboard() {
     ]);
 
     if (consumptionRes.data) {
-      setConsumptionData(consumptionRes.data);
-      const total = consumptionRes.data.reduce((sum, record) => sum + Number(record.kwh_consumed), 0);
-      const avg = consumptionRes.data.length > 0 ? total / consumptionRes.data.length : 0;
+      const consumptionRows = (consumptionRes.data as ConsumptionRecord[]) ?? [];
+      setConsumptionData(consumptionRows);
+      const total = consumptionRows.reduce((sum, record) => sum + Number(record.kwh_consumed), 0);
+      const avg = consumptionRows.length > 0 ? total / consumptionRows.length : 0;
 
       setStats((prev) => ({
         ...prev,
