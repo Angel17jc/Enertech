@@ -156,9 +156,6 @@ export default function WelcomePanel() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Introducción en video</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Incluye subtítulos, transcripción, control de audio y un video-intérprete opcional.
-            </p>
           </div>
           <div className="flex gap-2">
             <button
@@ -184,45 +181,66 @@ export default function WelcomePanel() {
           </div>
         )}
 
-        <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm bg-black/70">
-          <video
-            ref={videoRef}
-            className="w-full"
-            controls
-            aria-label="Video introductorio de Enertech"
-            poster="/media/intro-poster.jpg"
-          >
-            <source src={videoSrc} type="video/mp4" />
-            <track kind="captions" src={captionsSrc} srcLang="es" label="Español" default />
-            Tu navegador no soporta la reproducción de video.
-          </video>
+        <div className="mx-auto max-w-2xl relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md bg-black/80">
+          <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+            <video
+              ref={videoRef}
+              className="absolute inset-0 w-full h-full object-contain bg-black"
+              controls
+              aria-label="Video introductorio de Enertech"
+              poster="/media/intro-poster.jpg"
+            >
+              <source src={videoSrc} type="video/mp4" />
+              <track kind="captions" src={captionsSrc} srcLang="es" label="Español" default />
+              Tu navegador no soporta la reproducción de video.
+            </video>
+          </div>
 
+          {/* Intérprete: overlay en pantallas >= sm, bloque debajo en móviles */}
           {showInterpreter && interpreterSrc && (
-            <div className="absolute bottom-4 right-4 w-48 h-32 rounded-lg overflow-hidden shadow-lg border-2 border-emerald-500 bg-black">
-              <video
-                ref={interpreterRef}
-                src={interpreterSrc}
-                className="w-full h-full object-cover"
-                muted
-                loop
-                autoPlay
-                playsInline
-                aria-label="Intérprete en lengua de señas"
-              />
-            </div>
+            <>
+              <div id="intro-interpreter" className="hidden sm:block absolute bottom-4 right-4 w-44 h-28 rounded-lg overflow-hidden shadow-lg border-2 border-emerald-500 bg-black">
+                <video
+                  ref={interpreterRef}
+                  src={interpreterSrc}
+                  className="w-full h-full object-cover"
+                  muted
+                  loop
+                  autoPlay
+                  playsInline
+                  aria-label="Intérprete en lengua de señas"
+                />
+              </div>
+
+              <div className="sm:hidden mt-3 mx-auto w-full h-28 rounded-lg overflow-hidden shadow-md border-2 border-emerald-500 bg-black">
+                <video
+                  src={interpreterSrc}
+                  className="w-full h-full object-cover"
+                  muted
+                  loop
+                  autoPlay
+                  playsInline
+                  aria-label="Intérprete en lengua de señas"
+                />
+              </div>
+            </>
           )}
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <button
             onClick={() => setShowTranscript((v) => !v)}
-            className="px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm"
+            aria-expanded={showTranscript}
+            aria-controls="intro-transcript"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/90 dark:bg-gray-800/80 border shadow-sm text-sm text-gray-800 dark:text-gray-200 hover:shadow transition"
           >
             {showTranscript ? 'Ocultar transcripción' : 'Ver transcripción'}
           </button>
           <button
             onClick={() => setShowInterpreter((v) => !v)}
-            className="px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm"
+            aria-expanded={showInterpreter}
+            aria-controls="intro-interpreter"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/90 dark:bg-gray-800/80 border shadow-sm text-sm text-gray-800 dark:text-gray-200 hover:shadow transition"
           >
             {showInterpreter ? 'Ocultar intérprete' : 'Mostrar intérprete'}
           </button>
@@ -234,18 +252,22 @@ export default function WelcomePanel() {
               vid.pause();
               setPlaying(false);
             }}
-            className="px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/80 dark:bg-gray-800/70 border shadow-sm text-sm text-gray-800 dark:text-gray-200 hover:shadow transition"
           >
             Reiniciar
           </button>
         </div>
 
-        {showTranscript && (
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-            <p className="font-semibold text-gray-900 dark:text-white mb-1">Transcripción</p>
-            <p>{transcriptText}</p>
-          </div>
-        )}
+        <div
+          id="intro-transcript"
+          className={`rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-sm text-gray-700 dark:text-gray-300 transition-all duration-300 overflow-hidden ${
+            showTranscript ? 'max-h-96 px-4 py-3' : 'max-h-0 px-4 py-0'
+          }`}
+          aria-hidden={!showTranscript}
+        >
+          <div className="font-semibold text-gray-900 dark:text-white mb-1">Transcripción</div>
+          <div className="leading-relaxed">{transcriptText}</div>
+        </div>
       </section>
     </div>
   );
