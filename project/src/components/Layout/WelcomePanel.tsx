@@ -90,7 +90,7 @@ export default function WelcomePanel() {
           <div className="mt-3 grid grid-cols-2 gap-4">
             <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
               <div className="w-12 h-12 rounded-md overflow-hidden shadow-sm bg-white dark:bg-gray-900 flex items-center justify-center">
-                <img src="https://images.unsplash.com/photo-1581091870622-3c3f1a3e8b57?auto=format&fit=crop&w=400&q=60" alt="Dispositivos" className="object-cover w-full h-full" />
+                <img src="/media/devices-card.webp" alt="Dispositivos" className="object-cover w-full h-full" />
               </div>
               <div>
                 <div className="text-sm font-medium">{t('welcome.features.devices.title')}</div>
@@ -120,7 +120,7 @@ export default function WelcomePanel() {
 
             <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
               <div className="w-12 h-12 rounded-md overflow-hidden shadow-sm bg-white dark:bg-gray-900 flex items-center justify-center">
-                <img src="https://images.unsplash.com/photo-1484496957711-3a7c2a9a6d2f?auto=format&fit=crop&w=400&q=60" alt="Recomendaciones" className="object-cover w-full h-full" />
+                <img src="/media/recommendations-card.webp" alt="Recomendaciones" className="object-cover w-full h-full" />
               </div>
               <div>
                 <div className="text-sm font-medium">{t('welcome.features.recommendations.title')}</div>
