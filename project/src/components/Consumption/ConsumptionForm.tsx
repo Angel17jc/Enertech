@@ -4,6 +4,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 import { ConsumptionRecord } from '../../types';
 import { X } from 'lucide-react';
+import ConsumptionCalculator from './ConsumptionCalculator';
 
 interface ConsumptionFormProps {
   record: ConsumptionRecord | null;
@@ -21,6 +22,9 @@ export default function ConsumptionForm({ record, onClose }: ConsumptionFormProp
     notes: '',
   });
 
+  // user profile price per kwh if exists
+  const [userPrice, setUserPrice] = useState<number | null>(null);
+
   useEffect(() => {
     if (record) {
       setFormData({
@@ -37,16 +41,36 @@ export default function ConsumptionForm({ record, onClose }: ConsumptionFormProp
         notes: '',
       });
     }
+    // load user profile price if available
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('profiles').select('price_per_kwh').eq('id', user?.id).single();
+        if (!error && data) {
+          setUserPrice(data.price_per_kwh ?? null);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
   }, [record]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    const kwh = parseFloat(formData.kwh_consumed);
+    if (!Number.isFinite(kwh) || kwh < 0) {
+      setLoading(false);
+      alert('Por favor calcula el consumo con la "Calculadora rápida" antes de guardar.');
+      return;
+    }
+
+    const costVal = formData.cost ? parseFloat(formData.cost) : null;
+
     const data = {
       date: formData.date,
-      kwh_consumed: parseFloat(formData.kwh_consumed),
-      cost: parseFloat(formData.cost),
+      kwh_consumed: kwh,
+      cost: costVal,
       notes: formData.notes || null,
       user_id: user!.id,
     };
@@ -60,6 +84,10 @@ export default function ConsumptionForm({ record, onClose }: ConsumptionFormProp
     setLoading(false);
     onClose();
   };
+
+  function handleApplyCalculated({ kwh, cost }: { kwh: number; cost?: number | null }) {
+    setFormData((s) => ({ ...s, kwh_consumed: String(kwh), cost: cost != null ? String(cost) : '' }));
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true">
@@ -79,6 +107,10 @@ export default function ConsumptionForm({ record, onClose }: ConsumptionFormProp
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
+            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Estimador por dispositivo</div>
+            <ConsumptionCalculator onApply={handleApplyCalculated} defaultPricePerKwh={userPrice ?? null} />
+          </div>
+          <div>
             <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('consumption.date')}
             </label>
@@ -92,37 +124,7 @@ export default function ConsumptionForm({ record, onClose }: ConsumptionFormProp
             />
           </div>
 
-          <div>
-            <label htmlFor="kwh_consumed" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('consumption.kwh')}
-            </label>
-            <input
-              type="number"
-              id="kwh_consumed"
-              value={formData.kwh_consumed}
-              onChange={(e) => setFormData({ ...formData, kwh_consumed: e.target.value })}
-              required
-              min="0"
-              step="0.01"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('consumption.cost')}
-            </label>
-            <input
-              type="number"
-              id="cost"
-              value={formData.cost}
-              onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-              required
-              min="0"
-              step="0.01"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-          </div>
+          {/* kWh and cost inputs removed — values come from the Calculadora rápida */}
 
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

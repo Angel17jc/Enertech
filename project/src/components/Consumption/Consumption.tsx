@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { ConsumptionRecord } from '../../types';
 import { Plus, Edit2, Trash2, BarChart3 } from 'lucide-react';
 import ConsumptionForm from './ConsumptionForm';
+import ConsumptionDashboard from './ConsumptionDashboard';
 import { withTimeout } from '../../utils/withTimeout';
 
 export default function Consumption() {
@@ -94,72 +95,9 @@ export default function Consumption() {
         </button>
       </div>
 
-      {records.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
-          <BarChart3 className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" aria-hidden="true" />
-          <p className="text-gray-600 dark:text-gray-400">{t('consumption.noRecords')}</p>
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('consumption.date')}
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('consumption.kwh')}
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('consumption.cost')}
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('consumption.notes')}
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    {t('consumption.actions')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {records.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {new Date(record.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                      {Number(record.kwh_consumed).toFixed(2)} kWh
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      ${Number(record.cost).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {record.notes || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(record)}
-                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 mr-3 focus:outline-none focus:underline"
-                        aria-label={`${t('devices.edit')} ${record.date}`}
-                      >
-                        <Edit2 className="w-4 h-4 inline" aria-hidden="true" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(record.id)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 focus:outline-none focus:underline"
-                        aria-label={`${t('devices.delete')} ${record.date}`}
-                      >
-                        <Trash2 className="w-4 h-4 inline" aria-hidden="true" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <div>
+        <ConsumptionDashboard />
+      </div>
 
       {showForm && (
         <ConsumptionForm
