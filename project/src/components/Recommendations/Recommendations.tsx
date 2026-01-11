@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 import { Recommendation, UserRecommendation } from '../../types';
-import { Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import { Lightbulb, X } from 'lucide-react';
 import { withTimeout } from '../../utils/withTimeout';
 
 export default function Recommendations() {
@@ -12,7 +12,7 @@ export default function Recommendations() {
   const [recommendations, setRecommendations] = useState<(Recommendation & { userStatus?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [openRecId, setOpenRecId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -25,18 +25,21 @@ export default function Recommendations() {
     setLoading(true);
     setError(null);
     try {
-      const { data: allRecs } = await withTimeout(
+      const allRecsRes = (await withTimeout(
         supabase.from('recommendations').select('*').eq('is_active', true),
         10000
-      );
+      )) as { data: Recommendation[] | null };
 
-      const { data: userRecs } = await withTimeout(
+      const userRecsRes = (await withTimeout(
         supabase
           .from('user_recommendations')
           .select('*')
           .eq('user_id', user.id),
         10000
-      );
+      )) as { data: UserRecommendation[] | null };
+
+      const allRecs = allRecsRes.data;
+      const userRecs = userRecsRes.data;
 
       if (allRecs) {
         const userRecsMap = new Map(
@@ -97,51 +100,69 @@ export default function Recommendations() {
           {recommendations.map((rec) => (
             <div
               key={rec.id}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setOpenRecId(rec.id)}
             >
-              <button
-                onClick={() => setExpandedId(expandedId === rec.id ? null : rec.id)}
-                className="w-full text-left p-6 flex items-start gap-4 focus:outline-none"
-              >
+              <div className="flex items-start gap-4">
                 <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                   <Lightbulb className="w-6 h-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                        {language === 'es' ? rec.title_es : rec.title_en}
-                      </h3>
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getCategoryColor(rec.category)}`}>
-                        {t(`recommendations.category.${rec.category}`)}
-                      </span>
-                    </div>
-                    {expandedId === rec.id ? (
-                      <ChevronUp className="w-5 h-5 text-gray-500" aria-hidden="true" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-500" aria-hidden="true" />
-                    )}
-                  </div>
-                  {expandedId === rec.id && (
-                    <div className="mt-4 space-y-3">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {language === 'es' ? rec.description_es : rec.description_en}
-                      </p>
-                      {rec.potential_savings_percent && (
-                        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
-                          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
-                            {t('recommendations.savings')}: {rec.potential_savings_percent}%
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                    {language === 'es' ? rec.title_es : rec.title_en}
+                  </h3>
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getCategoryColor(rec.category)}`}>
+                    {t(`recommendations.category.${rec.category}`)}
+                  </span>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
+                    {language === 'es' ? rec.description_es : rec.description_en}
+                  </p>
                 </div>
-              </button>
+              </div>
             </div>
           ))}
         </div>
       )}
+
+      {openRecId && (() => {
+        const rec = recommendations.find((r) => r.id === openRecId);
+        if (!rec) return null;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpenRecId(null)} />
+            <div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 md:p-8">
+              <button
+                onClick={() => setOpenRecId(null)}
+                className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+                aria-label={t('common.close')}
+              >
+                <X className="w-5 h-5" aria-hidden="true" />
+              </button>
+              <div className="flex items-start gap-4 mb-4">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                  <Lightbulb className="w-6 h-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">{language === 'es' ? rec.title_es : rec.title_en}</h2>
+                  <span className={`inline-block mt-2 px-2 py-1 rounded text-xs font-medium ${getCategoryColor(rec.category)}`}>
+                    {t(`recommendations.category.${rec.category}`)}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-4 text-base leading-relaxed text-gray-700 dark:text-gray-200">
+                <p>{language === 'es' ? rec.description_es : rec.description_en}</p>
+                {rec.potential_savings_percent && (
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                    <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                      {t('recommendations.savings')}: {rec.potential_savings_percent}%
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

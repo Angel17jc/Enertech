@@ -129,6 +129,9 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.estimatedUsingDevices': 'Estimado por dispositivos',
     'dashboard.noDataEstimate': 'Sin datos en el rango; mostrando estimación por dispositivos. Registra consumos para ver datos reales.',
     'dashboard.deviceEstimateBreakdown': 'Desglose estimado por dispositivo',
+    'dashboard.deviceBreakdownFull': 'Dispositivos (estimado en rango)',
+    'dashboard.perDay': 'Por día',
+    'dashboard.lastUpdated': 'Actualizado',
     'dashboard.goalLabel.weekly': 'Meta semanal',
     'dashboard.goalLabel.monthly': 'Meta mensual',
     'dashboard.goalLabel.custom': 'Meta del periodo',
@@ -219,6 +222,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.kwh': 'kWh',
     'common.from': 'Desde',
     'common.to': 'Hasta',
+    'common.refresh': 'Actualizar',
   },
   en: {
     'app.title': 'Enertech',
@@ -325,6 +329,9 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.estimatedUsingDevices': 'Estimated from devices',
     'dashboard.noDataEstimate': 'No data in range; showing device-based estimate. Log consumption to see real data.',
     'dashboard.deviceEstimateBreakdown': 'Estimated breakdown by device',
+    'dashboard.deviceBreakdownFull': 'Devices (range estimate)',
+    'dashboard.perDay': 'Per day',
+    'dashboard.lastUpdated': 'Updated',
     'dashboard.goalLabel.weekly': 'Weekly goal',
     'dashboard.goalLabel.monthly': 'Monthly goal',
     'dashboard.goalLabel.custom': 'Period goal',
@@ -415,6 +422,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.kwh': 'kWh',
     'common.from': 'From',
     'common.to': 'To',
+    'common.refresh': 'Refresh',
   },
 };
 

@@ -21,6 +21,7 @@ export default function Dashboard() {
     activeDevices: 0,
     activeGoals: 0,
   });
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 29);
@@ -62,10 +63,12 @@ export default function Dashboard() {
       }
 
       if (devicesRes.data) {
-        setDevices(devicesRes.data as Device[]);
+        const userDevices = (devicesRes.data as Device[]) ?? [];
+        setDevices(userDevices);
+        const activeCount = userDevices.filter((d) => d.is_active !== false).length;
         setStats((prev) => ({
           ...prev,
-          activeDevices: devicesRes.data.length,
+          activeDevices: activeCount,
         }));
       }
 
@@ -76,6 +79,8 @@ export default function Dashboard() {
           activeGoals: goalsRes.data.filter((g: EnergyGoal) => g.status === 'active').length,
         }));
       }
+
+      setLastUpdated(new Date().toISOString());
     } catch (error) {
       console.error('Error loading dashboard data', error);
       setError(t('common.error'));
@@ -123,6 +128,23 @@ export default function Dashboard() {
         kwh: Number(((dev.watts * (dev.hours_per_day || 0) * days) / 1000).toFixed(2)),
       }))
       .sort((a, b) => b.kwh - a.kwh);
+  }, [devices, daysInRange]);
+
+  const deviceBreakdown = useMemo(() => {
+    const days = daysInRange || 1;
+    return devices
+      .filter((d) => d.is_active !== false)
+      .map((dev) => {
+        const perDay = (dev.watts * (dev.hours_per_day || 0)) / 1000;
+        const rangeTotal = perDay * days;
+        return {
+          id: dev.id,
+          name: dev.name,
+          perDayKwh: Number(perDay.toFixed(2)),
+          rangeKwh: Number(rangeTotal.toFixed(2)),
+        };
+      })
+      .sort((a, b) => b.rangeKwh - a.rangeKwh);
   }, [devices, daysInRange]);
 
   const topDevices = deviceEstimates.slice(0, 3);
@@ -223,6 +245,17 @@ export default function Dashboard() {
             onChange={(e) => setEndDate(e.target.value)}
             className="px-2 py-1 border rounded-md bg-white dark:bg-gray-800 dark:border-gray-700"
           />
+          <button
+            onClick={loadDashboardData}
+            className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            {t('common.refresh') || 'Actualizar'}
+          </button>
+          {lastUpdated && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {t('dashboard.lastUpdated') || 'Actualizado'}: {new Date(lastUpdated).toLocaleString()}
+            </span>
+          )}
         </div>
       </div>
 
@@ -340,13 +373,13 @@ export default function Dashboard() {
           </div>
         )}
 
-        {!hasConsumption && topDevices.length > 0 && (
+        {!hasConsumption && deviceEstimates.length > 0 && (
           <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
             <p className="text-sm font-medium text-gray-800 dark:text-gray-100 mb-2">
               {t('dashboard.deviceEstimateBreakdown') || 'Desglose estimado por dispositivo'}
             </p>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {topDevices.map((dev) => {
+              {deviceEstimates.map((dev) => {
                 const pct = totalEstimate > 0 ? (dev.kwh / totalEstimate) * 100 : 0;
                 return (
                   <div key={dev.id} className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 bg-gray-50 dark:bg-gray-800/50">
@@ -360,6 +393,26 @@ export default function Dashboard() {
               })}
             </div>
           </div>
+        )}
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('dashboard.deviceBreakdownFull') || 'Dispositivos (estimado en rango)'}</h3>
+          <span className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.estimateRange') || 'Estimado en el rango'}</span>
+        </div>
+        {deviceBreakdown.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {deviceBreakdown.map((dev) => (
+              <div key={dev.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{dev.name}</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">{dev.rangeKwh.toFixed(2)} kWh</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.perDay') || 'Por día'}: {dev.perDayKwh.toFixed(2)} kWh</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-gray-500 dark:text-gray-400">{t('dashboard.noDevicesData') || 'Sin estimaciones en este rango'}</div>
         )}
       </div>
 
