@@ -3,7 +3,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 import { ConsumptionRecord } from '../../types';
-import { Plus, Edit2, Trash2, BarChart3 } from 'lucide-react';
 import ConsumptionForm from './ConsumptionForm';
 import ConsumptionDashboard from './ConsumptionDashboard';
 import { withTimeout } from '../../utils/withTimeout';
@@ -84,15 +83,8 @@ export default function Consumption() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('consumption.title')}</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-        >
-          <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
-          {t('consumption.add')}
-        </button>
       </div>
 
       <div>
