@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 import { Recommendation, UserRecommendation } from '../../types';
-import { Lightbulb, CheckCircle, XCircle } from 'lucide-react';
+import { Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { withTimeout } from '../../utils/withTimeout';
 
 export default function Recommendations() {
@@ -12,6 +12,7 @@ export default function Recommendations() {
   const [recommendations, setRecommendations] = useState<(Recommendation & { userStatus?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -55,30 +56,6 @@ export default function Recommendations() {
     }
   };
 
-  const updateStatus = async (recId: string, status: 'applied' | 'dismissed') => {
-    const { data: existing } = await supabase
-      .from('user_recommendations')
-      .select('id')
-      .eq('user_id', user!.id)
-      .eq('recommendation_id', recId)
-      .maybeSingle();
-
-    if (existing) {
-      await supabase
-        .from('user_recommendations')
-        .update({ status })
-        .eq('id', existing.id);
-    } else {
-      await supabase.from('user_recommendations').insert({
-        user_id: user!.id,
-        recommendation_id: recId,
-        status,
-      });
-    }
-
-    loadRecommendations();
-  };
-
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
       heating: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300',
@@ -120,66 +97,47 @@ export default function Recommendations() {
           {recommendations.map((rec) => (
             <div
               key={rec.id}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
             >
-              <div className="flex items-start gap-4 mb-4">
+              <button
+                onClick={() => setExpandedId(expandedId === rec.id ? null : rec.id)}
+                className="w-full text-left p-6 flex items-start gap-4 focus:outline-none"
+              >
                 <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                   <Lightbulb className="w-6 h-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                    {language === 'es' ? rec.title_es : rec.title_en}
-                  </h3>
-                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getCategoryColor(rec.category)}`}>
-                    {t(`recommendations.category.${rec.category}`)}
-                  </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                        {language === 'es' ? rec.title_es : rec.title_en}
+                      </h3>
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getCategoryColor(rec.category)}`}>
+                        {t(`recommendations.category.${rec.category}`)}
+                      </span>
+                    </div>
+                    {expandedId === rec.id ? (
+                      <ChevronUp className="w-5 h-5 text-gray-500" aria-hidden="true" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-500" aria-hidden="true" />
+                    )}
+                  </div>
+                  {expandedId === rec.id && (
+                    <div className="mt-4 space-y-3">
+                      <p className="text-gray-600 dark:text-gray-400">
+                        {language === 'es' ? rec.description_es : rec.description_en}
+                      </p>
+                      {rec.potential_savings_percent && (
+                        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                            {t('recommendations.savings')}: {rec.potential_savings_percent}%
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {language === 'es' ? rec.description_es : rec.description_en}
-              </p>
-
-              {rec.potential_savings_percent && (
-                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 mb-4">
-                  <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
-                    {t('recommendations.savings')}: {rec.potential_savings_percent}%
-                  </p>
-                </div>
-              )}
-
-              {rec.userStatus === 'pending' && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => updateStatus(rec.id, 'applied')}
-                    className="flex-1 flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white rounded-lg transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" aria-hidden="true" />
-                    {t('recommendations.markApplied')}
-                  </button>
-                  <button
-                    onClick={() => updateStatus(rec.id, 'dismissed')}
-                    className="flex-1 flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" aria-hidden="true" />
-                    {t('recommendations.dismiss')}
-                  </button>
-                </div>
-              )}
-
-              {rec.userStatus === 'applied' && (
-                <div className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-                  <CheckCircle className="w-4 h-4 mr-2" aria-hidden="true" />
-                  Aplicada
-                </div>
-              )}
-
-              {rec.userStatus === 'dismissed' && (
-                <div className="flex items-center text-gray-500 dark:text-gray-500 text-sm">
-                  <XCircle className="w-4 h-4 mr-2" aria-hidden="true" />
-                  Descartada
-                </div>
-              )}
+              </button>
             </div>
           ))}
         </div>
