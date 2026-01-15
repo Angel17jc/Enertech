@@ -146,7 +146,7 @@ export default function WelcomePanel() {
       {user && (
         <div className="mt-6">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            ¿Te gustaría compartir tu opinión? Ve a la sección de Comentarios.
+            ¿Te gustaría compartir tu opinión? Usa el chat de soporte o envíanos un correo desde la sección de contacto.
           </p>
         </div>
       )}

@@ -83,12 +83,18 @@ export default function Consumption() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('consumption.title')}</h1>
+        <button
+          onClick={() => setShowForm(true)}
+          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        >
+          {t('consumption.add')}
+        </button>
       </div>
 
       <div>
-        <ConsumptionDashboard />
+        <ConsumptionDashboard records={records} />
       </div>
 
       {showForm && (

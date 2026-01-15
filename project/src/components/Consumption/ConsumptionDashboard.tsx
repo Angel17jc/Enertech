@@ -33,12 +33,15 @@ function getDatesBetween(start: Date, end: Date) {
   return dates;
 }
 
-export default function ConsumptionDashboard() {
+interface Props {
+  records: ConsumptionRecord[];
+}
+
+export default function ConsumptionDashboard({ records }: Props) {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [records, setRecords] = useState<ConsumptionRecord[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingDevices, setLoadingDevices] = useState(true);
   const [startDate, setStartDate] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 29);
@@ -48,15 +51,9 @@ export default function ConsumptionDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    setLoading(true);
+    setLoadingDevices(true);
     (async () => {
       try {
-        const { data: recs } = await supabase
-          .from('consumption_records')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: true });
-        setRecords((recs as ConsumptionRecord[]) || []);
         const { data: devs } = await supabase
           .from('devices')
           .select('*')
@@ -66,10 +63,18 @@ export default function ConsumptionDashboard() {
       } catch (e) {
         console.error(e);
       } finally {
-        setLoading(false);
+        setLoadingDevices(false);
       }
     })();
   }, [user]);
+
+  // auto fit date range to available records
+  useEffect(() => {
+    if (!records || records.length === 0) return;
+    const sorted = [...records].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    setStartDate(sorted[0].date.slice(0, 10));
+    setEndDate(sorted[sorted.length - 1].date.slice(0, 10));
+  }, [records]);
 
   const start = useMemo(() => new Date(startDate), [startDate]);
   const end = useMemo(() => new Date(endDate), [endDate]);
@@ -103,7 +108,7 @@ export default function ConsumptionDashboard() {
 
   const COLORS = ['#60a5fa', '#34d399', '#f59e0b', '#f97316', '#ef4444', '#a78bfa'];
 
-  if (loading) return <div className="p-8 text-center">Cargando...</div>;
+  if (loadingDevices) return <div className="p-8 text-center">Cargando...</div>;
 
   return (
     <div className="space-y-6">
@@ -173,10 +178,17 @@ export default function ConsumptionDashboard() {
                     <tr key={r.id}>
                       <td className="px-4 py-2">{new Date(r.date).toLocaleDateString()}</td>
                       <td className="px-4 py-2">{Number(r.kwh_consumed).toFixed(3)} kWh</td>
-                      <td className="px-4 py-2">${Number(r.cost).toFixed(2)}</td>
+                      <td className="px-4 py-2">{r.cost != null ? `$${Number(r.cost).toFixed(2)}` : '-'}</td>
                       <td className="px-4 py-2">{r.notes || '-'}</td>
                     </tr>
                   ))}
+                {records.filter((r) => r.date.slice(0, 10) >= startDate && r.date.slice(0, 10) <= endDate).length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
+                      {t('consumption.noRecords')}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

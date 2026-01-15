@@ -15,7 +15,7 @@ export default function Footer() {
               <li><a href="#/" className="hover:underline">Panel</a></li>
               <li><a href="#/devices" className="hover:underline">Dispositivos</a></li>
               <li><a href="#/consumption" className="hover:underline">Registro de consumo</a></li>
-              <li><a href="#/goals" className="hover:underline">Metas de ahorro</a></li>
+              <li><a href="#/recommendations" className="hover:underline">Recomendaciones</a></li>
             </ul>
           </div>
 

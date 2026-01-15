@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Cpu,
   BarChart3,
-  Target,
   Lightbulb,
   User,
   LogOut,
@@ -14,11 +13,9 @@ import {
   Home,
   Menu,
   X,
-  MessageSquare,
   Search,
   CornerDownLeft,
   MousePointer2,
-  ChevronDown,
 } from 'lucide-react';
 
 type NavItem = {
@@ -38,8 +35,6 @@ export default function Navbar() {
   const [highlightIndex, setHighlightIndex] = useState(0);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [showQuickActions, setShowQuickActions] = useState(false);
-  const [showRecommendationsMenu, setShowRecommendationsMenu] = useState(false);
-  const [showConsumptionMenu, setShowConsumptionMenu] = useState(false);
 
   const navItems = useMemo<NavItem[]>(() => {
     const base: NavItem[] = [{ id: 'inicio', path: '/', icon: Home, label: t('nav.home') }];
@@ -50,9 +45,7 @@ export default function Navbar() {
       { id: 'dashboard', path: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
       { id: 'devices', path: '/devices', icon: Cpu, label: t('nav.devices') },
       { id: 'consumption', path: '/consumption', icon: BarChart3, label: t('nav.consumption') },
-      { id: 'goals', path: '/goals', icon: Target, label: t('nav.goals') },
       { id: 'recommendations', path: '/recommendations', icon: Lightbulb, label: t('nav.recommendations') },
-      { id: 'feedback', path: '/feedback', icon: MessageSquare, label: t('nav.feedback') },
     ];
 
     if (profile?.role === 'admin') {
@@ -65,7 +58,6 @@ export default function Navbar() {
     if (!user) return [];
     const actions = [
       { id: 'settings', label: t('nav.profile'), path: '/settings' },
-      { id: 'feedback', label: t('nav.feedback'), path: '/feedback' },
     ];
     if (profile?.role === 'admin') {
       actions.push({ id: 'admin', label: t('nav.admin'), path: '/admin' });
@@ -127,11 +119,6 @@ export default function Navbar() {
     setHighlightIndex(0);
   }, [searchTerm]);
 
-  useEffect(() => {
-    setShowRecommendationsMenu(false);
-    setShowConsumptionMenu(false);
-  }, [location.pathname]);
-
   return (
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50" role="navigation" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -149,87 +136,8 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center space-x-1 flex-1 justify-center">
             {(searchTerm ? filtered : navItems).map((item) => {
-              if (item.id === 'feedback' || item.id === 'goals') return null;
               const Icon = item.icon;
               const isActive = isActivePath(item.path);
-              if (item.id === 'recommendations') {
-                return (
-                  <div
-                    key={item.id}
-                    className="relative"
-                    onMouseEnter={() => setShowRecommendationsMenu(true)}
-                    onMouseLeave={() => setShowRecommendationsMenu(false)}
-                  >
-                    <button
-                      onClick={() => handleNavigate(item.path)}
-                      onFocus={() => setShowRecommendationsMenu(true)}
-                      onBlur={() => setShowRecommendationsMenu(false)}
-                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                        isActive
-                          ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                      }`}
-                      aria-haspopup="true"
-                      aria-expanded={showRecommendationsMenu}
-                    >
-                      <Icon className="w-4 h-4 mr-2" aria-hidden="true" />
-                      {item.label}
-                      <ChevronDown className="w-3.5 h-3.5 ml-1" aria-hidden="true" />
-                    </button>
-                    {showRecommendationsMenu && (
-                      <div className="absolute left-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
-                        <button
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => handleNavigate('/feedback')}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
-                        >
-                          <MessageSquare className="w-4 h-4" aria-hidden="true" />
-                          {t('nav.feedback')}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              if (item.id === 'consumption') {
-                return (
-                  <div
-                    key={item.id}
-                    className="relative"
-                    onMouseEnter={() => setShowConsumptionMenu(true)}
-                    onMouseLeave={() => setShowConsumptionMenu(false)}
-                  >
-                    <button
-                      onClick={() => handleNavigate(item.path)}
-                      onFocus={() => setShowConsumptionMenu(true)}
-                      onBlur={() => setShowConsumptionMenu(false)}
-                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                        isActive
-                          ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                      }`}
-                      aria-haspopup="true"
-                      aria-expanded={showConsumptionMenu}
-                    >
-                      <Icon className="w-4 h-4 mr-2" aria-hidden="true" />
-                      {item.label}
-                      <ChevronDown className="w-3.5 h-3.5 ml-1" aria-hidden="true" />
-                    </button>
-                    {showConsumptionMenu && (
-                      <div className="absolute left-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
-                        <button
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => handleNavigate('/goals')}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
-                        >
-                          <Target className="w-4 h-4" aria-hidden="true" />
-                          {t('nav.goals')}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
               return (
                 <button
                   key={item.id}
