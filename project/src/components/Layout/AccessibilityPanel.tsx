@@ -68,17 +68,21 @@ export default function AccessibilityPanel() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Atajo personalizado para abrir/cerrar panel
+  // Atajo personalizado para abrir/cerrar panel y cerrar con ESC desde cualquier lugar
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (shortcutMatches(e)) {
         e.preventDefault();
         setOpen((s) => !s);
+        return;
       }
-      if (e.key === 'Escape' && open) setOpen(false);
+      if (e.key === 'Escape' && open) {
+        e.preventDefault();
+        setOpen(false);
+      }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('keydown', handler, { capture: true });
+    return () => window.removeEventListener('keydown', handler, { capture: true });
   }, [shortcutMatches, open]);
 
   useEffect(() => {

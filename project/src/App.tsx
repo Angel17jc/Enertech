@@ -84,6 +84,11 @@ function FullScreenLoader() {
 function ProtectedRoute({ children, requireAdmin = false }: { children: ReactNode; requireAdmin?: boolean }) {
   const { user, loading, profile } = useAuth();
 
+  // Evita flash en navegación: si ya hay user, no muestres loader
+  if (loading && user) {
+    return <>{children}</>;
+  }
+
   if (loading) {
     return <FullScreenLoader />;
   }
@@ -101,6 +106,11 @@ function ProtectedRoute({ children, requireAdmin = false }: { children: ReactNod
 
 function PublicOnlyRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
+
+  // Evita flash en navegación para usuarios ya autenticados
+  if (loading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   if (loading) {
     return <FullScreenLoader />;
