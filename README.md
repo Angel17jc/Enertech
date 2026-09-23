@@ -109,18 +109,17 @@ npm run start:api    # AI proxy on http://localhost:8080
 |---|---|
 | `profiles` | User profile linked to `auth.users`: role, language and theme preferences |
 | `devices` / `devices_catalog` | User appliances and the catalog of common device types |
+| `support_chat_messages` | AI assistant conversations of signed-in users |
 | `consumption_records` | Consumption history (date, kWh, cost) |
 | `energy_goals` | Savings goals and their status |
 | `recommendations` / `user_recommendations` | Bilingual tips and each user's status for them |
 | `electricity_rates` | Cost per kWh, managed by admins |
 | `feedback` | Feedback sent from the app |
 
-The core tables have **Row Level Security** enabled: users only see their own data,
+Every table has **Row Level Security** enabled: users only see their own data,
 admins can read global data and manage configuration, and anonymous users see nothing.
-
-> **Note:** the AI assistant saves conversations to a `support_chat_messages` table
-> that is not created by the migrations yet. Create it (with RLS) before using the
-> chat as a signed-in user, or conversations will not be saved.
+The device catalog is the only table anyone can read, and nobody can write to it
+from the client.
 
 ## More documentation
 
