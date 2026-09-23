@@ -63,7 +63,16 @@ const FeedbackForm: React.FC = () => {
         .insert([
           {
             user_id: user.id,
-            ...formData,
+            // la tabla usa columnas en snake_case
+            is_first_visit: formData.isFirstVisit,
+            found_needed: formData.foundNeeded,
+            visit_reason: formData.visitReason || null,
+            not_found_info: formData.notFoundInfo || null,
+            ease_of_use: formData.easeOfUse,
+            device_usage: formData.deviceUsage,
+            energy_savings_experience: formData.energySavingsExperience,
+            recommendations: formData.recommendations || null,
+            general_comments: formData.generalComments || null,
             submitted_at: new Date().toISOString()
           }
         ]);

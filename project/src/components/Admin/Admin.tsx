@@ -8,10 +8,27 @@ import { ConsumptionRecord } from '../../types';
 interface FeedbackItem {
   id: string;
   user_id: string;
-  message: string;
+  // solo el feedback antiguo tiene message; el formulario llena el resto
+  message: string | null;
+  ease_of_use: string | null;
+  device_usage: string | null;
+  energy_savings_experience: string | null;
+  general_comments: string | null;
+  recommendations: string | null;
+  not_found_info: string | null;
   created_at: string;
   profile_full_name?: string;
 }
+
+// claves de traducción de las opciones de "¿cuántos dispositivos?"
+const DEVICE_USAGE_KEYS: Record<string, string> = {
+  '1-2': 'feedback.devices12',
+  '3-5': 'feedback.devices35',
+  '6-10': 'feedback.devices610',
+  '10+': 'feedback.devices10Plus',
+};
+
+const clip = (text: string) => (text.length > 120 ? text.slice(0, 120) + '...' : text);
 
 export default function Admin() {
   const { t } = useLanguage();
@@ -37,7 +54,10 @@ export default function Admin() {
         Promise.all([
           supabase.from('profiles').select('*').order('created_at', { ascending: false }),
           supabase.from('consumption_records').select('kwh_consumed'),
-          supabase.from('feedback').select('id, user_id, message, created_at').order('created_at', { ascending: false }),
+          supabase
+            .from('feedback')
+            .select('id, user_id, message, ease_of_use, device_usage, energy_savings_experience, general_comments, recommendations, not_found_info, created_at')
+            .order('created_at', { ascending: false }),
         ]),
         10000
       );
@@ -63,10 +83,7 @@ export default function Admin() {
         const feedbackList: FeedbackItem[] = feedbackRes.data.map((f: any) => {
           const profile = profilesRes.data?.find((p: any) => p.id === f.user_id);
           return {
-            id: f.id,
-            user_id: f.user_id,
-            message: f.message,
-            created_at: f.created_at,
+            ...f,
             profile_full_name: profile?.full_name,
           } as FeedbackItem;
         });
@@ -192,7 +209,7 @@ export default function Admin() {
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Usuario</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mensaje</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Respuestas</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fecha</th>
                 <th className="px-6 py-3" />
               </tr>
@@ -201,7 +218,20 @@ export default function Admin() {
               {feedbacks.map((fb) => (
                 <tr key={fb.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{fb.profile_full_name ?? fb.user_id}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{fb.message.length > 120 ? fb.message.slice(0, 120) + '...' : fb.message}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                    {fb.message ? (
+                      clip(fb.message)
+                    ) : (
+                      <div className="space-y-1">
+                        {fb.ease_of_use && <p>Facilidad de uso: {t(`feedback.${fb.ease_of_use}`)}</p>}
+                        {fb.device_usage && <p>Dispositivos: {t(DEVICE_USAGE_KEYS[fb.device_usage] ?? fb.device_usage)}</p>}
+                        {fb.energy_savings_experience && <p>Experiencia de ahorro: {t(`feedback.${fb.energy_savings_experience}`)}</p>}
+                        {(fb.general_comments || fb.recommendations || fb.not_found_info) && (
+                          <p className="italic">{clip((fb.general_comments || fb.recommendations || fb.not_found_info) as string)}</p>
+                        )}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{new Date(fb.created_at).toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                     <button
